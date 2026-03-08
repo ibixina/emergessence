@@ -1,9 +1,12 @@
 // ===== THEME INITIALIZATION =====
-const themes = ['indigo', 'teal', 'crimson'];
+const themes = ['indigo', 'teal', 'crimson', 'emerald', 'amber', 'azure'];
 const themeColors = {
     indigo: { r: 128, g: 0, b: 255 },
     teal: { r: 0, g: 128, b: 128 },
-    crimson: { r: 139, g: 0, b: 0 }
+    crimson: { r: 139, g: 0, b: 0 },
+    emerald: { r: 0, g: 153, b: 76 },
+    amber: { r: 220, g: 100, b: 0 },
+    azure: { r: 0, g: 120, b: 255 }
 };
 
 const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
@@ -42,109 +45,109 @@ if (canvas) {
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
     let width, height;
     let animationId;
-    
+
     function getNodeCount() {
         const area = window.innerWidth * window.innerHeight;
         const baseCount = 35;
         const scaledCount = Math.floor((area / (1920 * 1080)) * 50);
         return Math.max(baseCount, Math.min(scaledCount, 80));
     }
-    
+
     let MAX_NODES = getNodeCount();
-    
+
     const gradientCache = {
         nodeGlows: [],
         signalGlows: []
     };
-    
+
     function createGradientCache() {
         gradientCache.nodeGlows = [];
         gradientCache.signalGlows = [];
-        
+
         const sizes = [3, 5, 8, 12, 15];
         sizes.forEach(size => {
             const offscreen = document.createElement('canvas');
             offscreen.width = size * 2;
             offscreen.height = size * 2;
             const octx = offscreen.getContext('2d');
-            
+
             const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
             gradient.addColorStop(0, 'rgba(255,255,255,1)');
             gradient.addColorStop(0.3, 'rgba(128,0,255,0.6)');
             gradient.addColorStop(1, 'rgba(128,0,255,0)');
-            
+
             octx.fillStyle = gradient;
             octx.fillRect(0, 0, offscreen.width, offscreen.height);
-            
+
             gradientCache.nodeGlows.push({ canvas: offscreen, size });
         });
-        
+
         [10, 15, 20].forEach(size => {
             const offscreen = document.createElement('canvas');
             offscreen.width = size * 2;
             offscreen.height = size * 2;
             const octx = offscreen.getContext('2d');
-            
+
             const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
             gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
             gradient.addColorStop(0.4, 'rgba(128,0,255,0.3)');
             gradient.addColorStop(1, 'rgba(128,0,255,0)');
-            
+
             octx.fillStyle = gradient;
             octx.fillRect(0, 0, offscreen.width, offscreen.height);
-            
+
             gradientCache.signalGlows.push({ canvas: offscreen, size });
         });
     }
-    
+
     createGradientCache();
-    
+
     function updateGradientCacheTheme() {
         const rgba = getAccentRGB();
         const [r, g, b] = rgba.match(/\d+/g);
-        
+
         gradientCache.nodeGlows.forEach(({ canvas: offscreen, size }) => {
             const octx = offscreen.getContext('2d');
             octx.clearRect(0, 0, offscreen.width, offscreen.height);
-            
+
             const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
             gradient.addColorStop(0, 'rgba(255,255,255,1)');
             gradient.addColorStop(0.3, `rgba(${r},${g},${b},0.6)`);
             gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
-            
+
             octx.fillStyle = gradient;
             octx.fillRect(0, 0, offscreen.width, offscreen.height);
         });
-        
+
         gradientCache.signalGlows.forEach(({ canvas: offscreen, size }) => {
             const octx = offscreen.getContext('2d');
             octx.clearRect(0, 0, offscreen.width, offscreen.height);
-            
+
             const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
             gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
             gradient.addColorStop(0.4, `rgba(${r},${g},${b},0.3)`);
             gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
-            
+
             octx.fillStyle = gradient;
             octx.fillRect(0, 0, offscreen.width, offscreen.height);
         });
     }
-    
+
     updateGradientCacheTheme();
-    
+
     function resize() {
         width = canvas.width = window.innerWidth;
         height = canvas.height = window.innerHeight;
         MAX_NODES = getNodeCount();
         initNodes();
     }
-    
+
     // Enhanced Node class
     class Node {
         constructor(x, y) {
             this.reset(x, y);
         }
-        
+
         reset(x, y) {
             this.x = x ?? Math.random() * width;
             this.y = y ?? Math.random() * height;
@@ -157,24 +160,24 @@ if (canvas) {
             this.activity = 0;
             this.lastFired = 0;
         }
-        
+
         update(time) {
             this.x += this.vx;
             this.y += this.vy;
-            
+
             if (this.x < 0 || this.x > width) this.vx *= -1;
             if (this.y < 0 || this.y > height) this.vy *= -1;
-            
+
             this.x = Math.max(0, Math.min(width, this.x));
             this.y = Math.max(0, Math.min(height, this.y));
-            
+
             this.pulse += 0.05;
             this.energy = (Math.sin(this.pulse) + 1) / 2;
-            
+
             const dx = cursorX - this.x;
             const dy = cursorY - this.y;
             const distSq = dx * dx + dy * dy;
-            
+
             if (distSq < 40000 && distSq > 2500) {
                 const dist = Math.sqrt(distSq);
                 const force = (200 - dist) / 200 * 0.5;
@@ -186,33 +189,33 @@ if (canvas) {
                 this.vx -= (dx / dist) * force * 0.2;
                 this.vy -= (dy / dist) * force * 0.2;
             }
-            
+
             this.activity *= 0.95;
-            
+
             if (Math.random() < 0.005 && time - this.lastFired > 50) {
                 this.fire();
                 this.lastFired = time;
             }
-            
+
             this.vx *= 0.99;
             this.vy *= 0.99;
         }
-        
+
         fire() {
             this.activity = 1;
             this.energy = 1;
         }
-        
+
         draw() {
             const ix = this.x | 0;
             const iy = this.y | 0;
-            
+
             if (ix < -50 || ix > width + 50 || iy < -50 || iy > height + 50) return;
-            
+
             const size = this.radius * (1 + this.energy * 0.3);
             const activityBoost = this.activity * 0.5;
             const glowSize = this.type === 1 ? size * 5 : size * 3;
-            
+
             if (this.energy + activityBoost > 0.3) {
                 const glowCanvas = gradientCache.nodeGlows.find(g => g.size >= glowSize) || gradientCache.nodeGlows[gradientCache.nodeGlows.length - 1];
                 const scale = glowSize / glowCanvas.size;
@@ -220,7 +223,7 @@ if (canvas) {
                 ctx.drawImage(glowCanvas.canvas, ix - glowSize, iy - glowSize, glowSize * 2, glowSize * 2);
                 ctx.globalAlpha = 1;
             }
-            
+
             if (this.activity > 0.7) {
                 ctx.fillStyle = '#ffffff';
             } else if (this.energy > 0.7 || this.type === 1) {
@@ -228,18 +231,18 @@ if (canvas) {
             } else {
                 ctx.fillStyle = '#000000';
             }
-            
+
             ctx.beginPath();
             ctx.arc(ix, iy, size, 0, Math.PI * 2);
             ctx.fill();
-            
+
             if (this.activity > 0.5 || this.energy > 0.8) {
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(ix, iy, size * 0.4, 0, Math.PI * 2);
                 ctx.fill();
             }
-            
+
             if (this.type === 1) {
                 ctx.strokeStyle = getAccentRGBA(this.energy * 0.6);
                 ctx.lineWidth = 2;
@@ -249,12 +252,12 @@ if (canvas) {
             }
         }
     }
-    
+
     class Signal {
         constructor() {
             this.reset();
         }
-        
+
         reset(from, to) {
             if (!from || !to) {
                 this.active = false;
@@ -269,7 +272,7 @@ if (canvas) {
             this.dx = to.x - from.x;
             this.dy = to.y - from.y;
         }
-        
+
         update() {
             if (!this.from || !this.to) {
                 this.active = false;
@@ -283,32 +286,32 @@ if (canvas) {
             }
             return true;
         }
-        
+
         draw() {
             if (!this.from || !this.to) return;
-            
+
             const ix = (this.from.x + this.dx * this.progress) | 0;
             const iy = (this.from.y + this.dy * this.progress) | 0;
-            
+
             if (ix < -50 || ix > width + 50 || iy < -50 || iy > height + 50) return;
-            
+
             const signalCanvas = gradientCache.signalGlows[1];
             ctx.globalAlpha = this.strength;
             ctx.drawImage(signalCanvas.canvas, ix - 20, iy - 20, 40, 40);
             ctx.globalAlpha = 1;
-            
+
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(ix, iy, 4, 0, Math.PI * 2);
             ctx.fill();
-            
+
             for (let i = 1; i <= 2; i++) {
                 const trailProgress = this.progress - i * 0.1;
                 if (trailProgress > 0) {
                     const tx = (this.from.x + this.dx * trailProgress) | 0;
                     const ty = (this.from.y + this.dy * trailProgress) | 0;
                     const alpha = (1 - i * 0.5) * this.strength * 0.4;
-                    
+
                     ctx.fillStyle = getAccentRGBA(alpha);
                     ctx.beginPath();
                     ctx.arc(tx, ty, 2, 0, Math.PI * 2);
@@ -317,20 +320,20 @@ if (canvas) {
             }
         }
     }
-    
+
     let nodes = [];
     let signals = [];
     let time = 0;
     const CONNECTION_DISTANCE = 200;
     const CONNECTION_DISTANCE_SQ = CONNECTION_DISTANCE * CONNECTION_DISTANCE;
-    
+
     const GRID_SIZE = 250;
     let spatialGrid = {};
-    
+
     function getCellKey(x, y) {
         return `${Math.floor(x / GRID_SIZE)},${Math.floor(y / GRID_SIZE)}`;
     }
-    
+
     function updateSpatialGrid() {
         spatialGrid = {};
         for (let i = 0; i < nodes.length; i++) {
@@ -339,7 +342,7 @@ if (canvas) {
             spatialGrid[key].push(i);
         }
     }
-    
+
     function initNodes() {
         nodes = [];
         for (let i = 0; i < MAX_NODES; i++) {
@@ -347,7 +350,7 @@ if (canvas) {
         }
         updateSpatialGrid();
     }
-    
+
     class ObjectPool {
         constructor(createFn, resetFn, initialSize = 50) {
             this.pool = [];
@@ -358,7 +361,7 @@ if (canvas) {
                 this.pool.push(createFn());
             }
         }
-        
+
         get(...args) {
             let obj = this.pool.pop();
             if (!obj) obj = this.createFn();
@@ -370,7 +373,7 @@ if (canvas) {
             }
             return obj;
         }
-        
+
         release(obj) {
             const index = this.active.indexOf(obj);
             if (index > -1) {
@@ -378,35 +381,35 @@ if (canvas) {
                 this.pool.push(obj);
             }
         }
-        
+
         releaseAll() {
             this.pool.push(...this.active);
             this.active.length = 0;
         }
     }
-    
+
     const signalPool = new ObjectPool(
         () => new Signal(),
         (signal, from, to) => signal.reset(from, to),
         30
     );
-    
+
     let lastSignalTime = 0;
     const SIGNAL_INTERVAL = 150;
-    
+
     function createSignals(currentTime) {
         if (currentTime - lastSignalTime < SIGNAL_INTERVAL) return;
         lastSignalTime = currentTime;
-        
+
         if (nodes.length > 1 && signalPool.active.length < 25) {
             if (Math.random() < 0.3) {
                 const startNode = nodes[Math.floor(Math.random() * nodes.length)];
                 if (startNode) {
                     startNode.fire();
-                    
+
                     const key = getCellKey(startNode.x, startNode.y);
                     const nearby = [];
-                    
+
                     for (let dx = -1; dx <= 1; dx++) {
                         for (let dy = -1; dy <= 1; dy++) {
                             const cellX = Math.floor(startNode.x / GRID_SIZE) + dx;
@@ -415,7 +418,7 @@ if (canvas) {
                             if (spatialGrid[checkKey]) nearby.push(...spatialGrid[checkKey]);
                         }
                     }
-                    
+
                     for (let i = 0; i < nearby.length && i < 5; i++) {
                         const nodeIdx = nearby[i];
                         const node = nodes[nodeIdx];
@@ -441,53 +444,53 @@ if (canvas) {
             }
         }
     }
-    
+
     function drawConnections() {
         ctx.lineWidth = 1;
-        
+
         for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i];
             const ix = node.x | 0;
             const iy = node.y | 0;
-            
-            if (ix < -CONNECTION_DISTANCE || ix > width + CONNECTION_DISTANCE || 
+
+            if (ix < -CONNECTION_DISTANCE || ix > width + CONNECTION_DISTANCE ||
                 iy < -CONNECTION_DISTANCE || iy > height + CONNECTION_DISTANCE) continue;
-            
+
             const key = getCellKey(node.x, node.y);
-            
+
             for (let dx = 0; dx <= 1; dx++) {
                 for (let dy = -1; dy <= 1; dy++) {
                     if (dx === 0 && dy === -1) continue;
-                    
+
                     const cellX = Math.floor(node.x / GRID_SIZE) + dx;
                     const cellY = Math.floor(node.y / GRID_SIZE) + dy;
                     const checkKey = `${cellX},${cellY}`;
-                    
+
                     if (!spatialGrid[checkKey]) continue;
-                    
+
                     for (const j of spatialGrid[checkKey]) {
                         if (j <= i) continue;
-                        
+
                         const other = nodes[j];
                         if (!other) continue;
-                        
+
                         const ddx = node.x - other.x;
                         const ddy = node.y - other.y;
                         const distSq = ddx * ddx + ddy * ddy;
-                        
+
                         if (distSq < CONNECTION_DISTANCE_SQ) {
                             const dist = Math.sqrt(distSq);
                             const opacity = (CONNECTION_DISTANCE - dist) / CONNECTION_DISTANCE;
                             const avgEnergy = (node.energy + other.energy) / 2;
                             const avgActivity = (node.activity + other.activity) / 2;
-                            
+
                             ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.4})`;
                             ctx.lineWidth = 1 + avgEnergy;
                             ctx.beginPath();
                             ctx.moveTo(ix, iy);
                             ctx.lineTo(other.x | 0, other.y | 0);
                             ctx.stroke();
-                            
+
                             if (avgEnergy > 0.6 || avgActivity > 0.3) {
                                 const energyOpacity = Math.max(avgEnergy, avgActivity) * opacity;
                                 ctx.strokeStyle = getAccentRGBA(energyOpacity * 0.6);
@@ -504,40 +507,40 @@ if (canvas) {
             }
         }
     }
-    
+
     let lastTime = performance.now();
     let isTabVisible = true;
-    
+
     document.addEventListener('visibilitychange', () => {
         isTabVisible = !document.hidden;
         if (isTabVisible) {
             lastTime = performance.now();
         }
     });
-    
+
     function animate(currentTime) {
         if (!isTabVisible) {
             animationId = requestAnimationFrame(animate);
             return;
         }
-        
+
         const deltaTime = currentTime - lastTime;
         lastTime = currentTime;
-        
+
         if (deltaTime < 16) {
             animationId = requestAnimationFrame(animate);
             return;
         }
-        
+
         ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
         ctx.fillRect(0, 0, width, height);
-        
+
         if (time % 10 === 0) {
             updateSpatialGrid();
         }
-        
+
         drawConnections();
-        
+
         for (let i = signalPool.active.length - 1; i >= 0; i--) {
             const signal = signalPool.active[i];
             if (!signal.update()) {
@@ -546,18 +549,18 @@ if (canvas) {
                 signal.draw();
             }
         }
-        
+
         for (let i = 0; i < nodes.length; i++) {
             nodes[i].update(time);
             nodes[i].draw();
         }
-        
+
         createSignals(currentTime);
-        
+
         time++;
         animationId = requestAnimationFrame(animate);
     }
-    
+
     resize();
     window.addEventListener('resize', resize);
     animationId = requestAnimationFrame(animate);
@@ -570,14 +573,14 @@ class LivingInk {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', { alpha: true });
         this.container.appendChild(this.canvas);
-        
+
         this.particles = [];
         this.mouseX = -1000;
         this.mouseY = -1000;
         this.isHovered = false;
         this.animationId = null;
         this.particleCount = 60;
-        
+
         // Bind handlers for proper cleanup
         this.resizeHandler = () => this.resize();
         this.mouseEnterHandler = () => {
@@ -592,7 +595,7 @@ class LivingInk {
             this.mouseX = e.clientX - rect.left;
             this.mouseY = e.clientY - rect.top;
         };
-        
+
         this.init();
     }
 
@@ -642,7 +645,7 @@ class LivingInk {
             const dx = swarmTargetX - p.x;
             const dy = swarmTargetY - p.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            
+
             if (this.isHovered) {
                 const force = Math.min(dist * 0.002, p.accel);
                 p.vx += (dx / dist) * force;
@@ -668,11 +671,11 @@ class LivingInk {
             this.ctx.beginPath();
             this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             this.ctx.fill();
-            
+
             // Subtle "bleeding" connections
             if (dist < 30) {
                 this.ctx.beginPath();
-                this.ctx.strokeStyle = `rgba(0, 0, 0, ${0.1 * (1 - dist/30)})`;
+                this.ctx.strokeStyle = `rgba(0, 0, 0, ${0.1 * (1 - dist / 30)})`;
                 this.ctx.moveTo(p.x, p.y);
                 this.ctx.lineTo(swarmTargetX, swarmTargetY);
                 this.ctx.stroke();
@@ -707,7 +710,7 @@ projectCards.forEach((card, index) => {
     card.style.opacity = '0';
     card.style.transform = 'translateY(30px)';
     card.style.transition = `opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 100}ms`;
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -717,20 +720,20 @@ projectCards.forEach((card, index) => {
             }
         });
     }, { threshold: 0.1 });
-    
+
     observer.observe(card);
-    
+
     // Simple 3D tilt without gradients
     let rafId = null;
     let targetRotateX = 0;
     let targetRotateY = 0;
     let currentRotateX = 0;
     let currentRotateY = 0;
-    
+
     function updateTransform() {
         currentRotateX += (targetRotateX - currentRotateX) * 0.1;
         currentRotateY += (targetRotateY - currentRotateY) * 0.1;
-        
+
         if (Math.abs(targetRotateX - currentRotateX) > 0.01 || Math.abs(targetRotateY - currentRotateY) > 0.01) {
             card.style.transform = `perspective(1000px) rotateX(${currentRotateX}deg) rotateY(${currentRotateY}deg) scale(1.02)`;
             rafId = requestAnimationFrame(updateTransform);
@@ -738,30 +741,30 @@ projectCards.forEach((card, index) => {
             rafId = null;
         }
     }
-    
+
     card.addEventListener('mouseenter', () => {
         if (!rafId) rafId = requestAnimationFrame(updateTransform);
     });
-    
+
     card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
+
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        
+
         targetRotateX = ((y - centerY) / centerY) * -8;
         targetRotateY = ((x - centerX) / centerX) * 8;
-        
+
         if (!rafId) rafId = requestAnimationFrame(updateTransform);
     }, { passive: true });
-    
+
     card.addEventListener('mouseleave', () => {
         targetRotateX = 0;
         targetRotateY = 0;
         if (!rafId) rafId = requestAnimationFrame(updateTransform);
-        
+
         setTimeout(() => {
             if (rafId) {
                 cancelAnimationFrame(rafId);
@@ -799,7 +802,7 @@ function setupCrypticEffect(element, config = {}) {
 
     // Split by <br> tags to preserve structure
     const lines = originalHTML.split(/<br\s*\/?>/i);
-    
+
     const scramble = () => {
         return lines.map((line) => {
             return line.split('').map((char) => {
@@ -822,18 +825,18 @@ function setupCrypticEffect(element, config = {}) {
         };
         initializeEncryption();
     }
-    
+
     const triggerRoll = () => {
         if (isRolling) return;
         isRolling = true;
-        
+
         const rect = element.getBoundingClientRect();
         element.style.minWidth = `${rect.width}px`;
         element.style.minHeight = `${rect.height}px`;
-        
+
         let frame = 0;
         const totalLetters = lines.join('').length;
-        
+
         const interval = setInterval(() => {
             let completeCount = 0;
             let charIndex = 0;
@@ -848,15 +851,15 @@ function setupCrypticEffect(element, config = {}) {
                         completeCount++;
                         return char;
                     }
-                    
+
                     if (char === ' ') return ' ';
                     return charset[Math.floor(Math.random() * charset.length)];
                 }).join('');
             }).join('<br>');
-            
+
             element.innerHTML = newHTML;
             frame++;
-            
+
             if (completeCount >= totalLetters || frame > 100) {
                 clearInterval(interval);
                 element.innerHTML = originalHTML;
@@ -876,7 +879,7 @@ function setupCrypticEffect(element, config = {}) {
     element.addEventListener('mouseenter', triggerRoll);
 
     if (initialDelay > 0) setTimeout(triggerRoll, initialDelay);
-    
+
     if (!startEncrypted) {
         crypticObserver.observe(element);
     }
@@ -910,10 +913,10 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // ===== KEYBOARD CONTROLS =====
 document.addEventListener('keydown', (e) => {
     if (!canvas || typeof signalPool === 'undefined') return;
-    
+
     const key = e.key.toLowerCase();
-    
-    switch(key) {
+
+    switch (key) {
         case 'n':
             if (nodes.length < 100) {
                 const newNode = new Node();
@@ -922,12 +925,12 @@ document.addEventListener('keydown', (e) => {
                 nodes.push(newNode);
             }
             break;
-            
+
         case 'c':
             initNodes();
             signalPool.releaseAll();
             break;
-            
+
         case 'e':
             nodes.forEach(node => {
                 const dx = node.x - cursorX;
@@ -936,11 +939,11 @@ document.addEventListener('keydown', (e) => {
                 setTimeout(() => node.fire(), dist * 2);
             });
             break;
-            
+
         case 's':
             let nearestNode = null;
             let minDist = Infinity;
-            
+
             for (const node of nodes) {
                 const dx = node.x - cursorX;
                 const dy = node.y - cursorY;
@@ -950,7 +953,7 @@ document.addEventListener('keydown', (e) => {
                     nearestNode = node;
                 }
             }
-            
+
             if (nearestNode) {
                 nearestNode.fire();
                 const nearby = nodes.filter(node => {
