@@ -10,6 +10,13 @@ const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
 document.documentElement.setAttribute('data-theme', selectedTheme);
 const accentColor = themeColors[selectedTheme];
 
+function updateThemeGradientCache() {
+    if (typeof updateGradientCacheTheme === 'function') {
+        updateGradientCacheTheme();
+    }
+}
+updateThemeGradientCache();
+
 // Helper function to get accent color with alpha
 function getAccentRGBA(alpha) {
     return `rgba(${accentColor.r}, ${accentColor.g}, ${accentColor.b}, ${alpha})`;
@@ -21,51 +28,114 @@ function getAccentRGB() {
 
 // COMPREHENSIVE NEURAL NETWORK - Fixed Version
 
-// ===== CUSTOM CURSOR =====
-const cursor = document.querySelector('.cursor-follower');
-let cursorX = 0;
-let cursorY = 0;
-let cursorScale = 1;
-
-if (cursor) {
-    // Track mouse position
-    document.addEventListener('mousemove', (e) => {
-        cursorX = e.clientX;
-        cursorY = e.clientY;
-        updateCursorTransform();
-    }, { passive: true });
-    
-    // Update cursor transform with position and scale
-    function updateCursorTransform() {
-        cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) scale(${cursorScale})`;
-    }
-    
-    // Handle hover states
-    const interactiveElements = document.querySelectorAll('a, button, .project-card, .pub-entry');
-    interactiveElements.forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            cursorScale = 2.5;
-            cursor.classList.add('cursor-hover');
-            updateCursorTransform();
-        }, { passive: true });
-        el.addEventListener('mouseleave', () => {
-            cursorScale = 1;
-            cursor.classList.remove('cursor-hover');
-            updateCursorTransform();
-        }, { passive: true });
-    });
-}
-
 // ===== COMPREHENSIVE NEURAL NETWORK =====
+let cursorX = -1000;
+let cursorY = -1000;
+
+document.addEventListener('mousemove', (e) => {
+    cursorX = e.clientX;
+    cursorY = e.clientY;
+}, { passive: true });
+
 const canvas = document.getElementById('neural-canvas');
 if (canvas) {
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
     let width, height;
     let animationId;
     
+    function getNodeCount() {
+        const area = window.innerWidth * window.innerHeight;
+        const baseCount = 35;
+        const scaledCount = Math.floor((area / (1920 * 1080)) * 50);
+        return Math.max(baseCount, Math.min(scaledCount, 80));
+    }
+    
+    let MAX_NODES = getNodeCount();
+    
+    const gradientCache = {
+        nodeGlows: [],
+        signalGlows: []
+    };
+    
+    function createGradientCache() {
+        gradientCache.nodeGlows = [];
+        gradientCache.signalGlows = [];
+        
+        const sizes = [3, 5, 8, 12, 15];
+        sizes.forEach(size => {
+            const offscreen = document.createElement('canvas');
+            offscreen.width = size * 2;
+            offscreen.height = size * 2;
+            const octx = offscreen.getContext('2d');
+            
+            const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.3, 'rgba(128,0,255,0.6)');
+            gradient.addColorStop(1, 'rgba(128,0,255,0)');
+            
+            octx.fillStyle = gradient;
+            octx.fillRect(0, 0, offscreen.width, offscreen.height);
+            
+            gradientCache.nodeGlows.push({ canvas: offscreen, size });
+        });
+        
+        [10, 15, 20].forEach(size => {
+            const offscreen = document.createElement('canvas');
+            offscreen.width = size * 2;
+            offscreen.height = size * 2;
+            const octx = offscreen.getContext('2d');
+            
+            const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
+            gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.4, 'rgba(128,0,255,0.3)');
+            gradient.addColorStop(1, 'rgba(128,0,255,0)');
+            
+            octx.fillStyle = gradient;
+            octx.fillRect(0, 0, offscreen.width, offscreen.height);
+            
+            gradientCache.signalGlows.push({ canvas: offscreen, size });
+        });
+    }
+    
+    createGradientCache();
+    
+    function updateGradientCacheTheme() {
+        const rgba = getAccentRGB();
+        const [r, g, b] = rgba.match(/\d+/g);
+        
+        gradientCache.nodeGlows.forEach(({ canvas: offscreen, size }) => {
+            const octx = offscreen.getContext('2d');
+            octx.clearRect(0, 0, offscreen.width, offscreen.height);
+            
+            const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.3, `rgba(${r},${g},${b},0.6)`);
+            gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+            
+            octx.fillStyle = gradient;
+            octx.fillRect(0, 0, offscreen.width, offscreen.height);
+        });
+        
+        gradientCache.signalGlows.forEach(({ canvas: offscreen, size }) => {
+            const octx = offscreen.getContext('2d');
+            octx.clearRect(0, 0, offscreen.width, offscreen.height);
+            
+            const gradient = octx.createRadialGradient(size, size, 0, size, size, size);
+            gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.4, `rgba(${r},${g},${b},0.3)`);
+            gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+            
+            octx.fillStyle = gradient;
+            octx.fillRect(0, 0, offscreen.width, offscreen.height);
+        });
+    }
+    
+    updateGradientCacheTheme();
+    
     function resize() {
         width = canvas.width = window.innerWidth;
         height = canvas.height = window.innerHeight;
+        MAX_NODES = getNodeCount();
         initNodes();
     }
     
@@ -134,19 +204,21 @@ if (canvas) {
         }
         
         draw() {
+            const ix = this.x | 0;
+            const iy = this.y | 0;
+            
+            if (ix < -50 || ix > width + 50 || iy < -50 || iy > height + 50) return;
+            
             const size = this.radius * (1 + this.energy * 0.3);
             const activityBoost = this.activity * 0.5;
             const glowSize = this.type === 1 ? size * 5 : size * 3;
             
             if (this.energy + activityBoost > 0.3) {
-                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize);
-                gradient.addColorStop(0, getAccentRGBA((this.energy + activityBoost) * 0.4));
-                gradient.addColorStop(1, getAccentRGBA(0));
-                
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
-                ctx.fill();
+                const glowCanvas = gradientCache.nodeGlows.find(g => g.size >= glowSize) || gradientCache.nodeGlows[gradientCache.nodeGlows.length - 1];
+                const scale = glowSize / glowCanvas.size;
+                ctx.globalAlpha = (this.energy + activityBoost) * 0.4;
+                ctx.drawImage(glowCanvas.canvas, ix - glowSize, iy - glowSize, glowSize * 2, glowSize * 2);
+                ctx.globalAlpha = 1;
             }
             
             if (this.activity > 0.7) {
@@ -158,13 +230,13 @@ if (canvas) {
             }
             
             ctx.beginPath();
-            ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+            ctx.arc(ix, iy, size, 0, Math.PI * 2);
             ctx.fill();
             
             if (this.activity > 0.5 || this.energy > 0.8) {
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, size * 0.4, 0, Math.PI * 2);
+                ctx.arc(ix, iy, size * 0.4, 0, Math.PI * 2);
                 ctx.fill();
             }
             
@@ -172,7 +244,7 @@ if (canvas) {
                 ctx.strokeStyle = getAccentRGBA(this.energy * 0.6);
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, size + 4, 0, Math.PI * 2);
+                ctx.arc(ix, iy, size + 4, 0, Math.PI * 2);
                 ctx.stroke();
             }
         }
@@ -214,33 +286,32 @@ if (canvas) {
         
         draw() {
             if (!this.from || !this.to) return;
-            const x = this.from.x + this.dx * this.progress;
-            const y = this.from.y + this.dy * this.progress;
             
-            const gradient = ctx.createRadialGradient(x, y, 0, x, y, 20);
-            gradient.addColorStop(0, getAccentRGBA(this.strength));
-            gradient.addColorStop(1, getAccentRGBA(0));
+            const ix = (this.from.x + this.dx * this.progress) | 0;
+            const iy = (this.from.y + this.dy * this.progress) | 0;
             
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(x, y, 20, 0, Math.PI * 2);
-            ctx.fill();
+            if (ix < -50 || ix > width + 50 || iy < -50 || iy > height + 50) return;
+            
+            const signalCanvas = gradientCache.signalGlows[1];
+            ctx.globalAlpha = this.strength;
+            ctx.drawImage(signalCanvas.canvas, ix - 20, iy - 20, 40, 40);
+            ctx.globalAlpha = 1;
             
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.arc(ix, iy, 4, 0, Math.PI * 2);
             ctx.fill();
             
             for (let i = 1; i <= 2; i++) {
                 const trailProgress = this.progress - i * 0.1;
                 if (trailProgress > 0) {
-                    const tx = this.from.x + this.dx * trailProgress;
-                    const ty = this.from.y + this.dy * trailProgress;
+                    const tx = (this.from.x + this.dx * trailProgress) | 0;
+                    const ty = (this.from.y + this.dy * trailProgress) | 0;
                     const alpha = (1 - i * 0.5) * this.strength * 0.4;
                     
                     ctx.fillStyle = getAccentRGBA(alpha);
                     ctx.beginPath();
-                    ctx.arc(tx, ty, 3, 0, Math.PI * 2);
+                    ctx.arc(tx, ty, 2, 0, Math.PI * 2);
                     ctx.fill();
                 }
             }
@@ -250,7 +321,6 @@ if (canvas) {
     let nodes = [];
     let signals = [];
     let time = 0;
-    const MAX_NODES = 100;
     const CONNECTION_DISTANCE = 200;
     const CONNECTION_DISTANCE_SQ = CONNECTION_DISTANCE * CONNECTION_DISTANCE;
     
@@ -377,6 +447,12 @@ if (canvas) {
         
         for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i];
+            const ix = node.x | 0;
+            const iy = node.y | 0;
+            
+            if (ix < -CONNECTION_DISTANCE || ix > width + CONNECTION_DISTANCE || 
+                iy < -CONNECTION_DISTANCE || iy > height + CONNECTION_DISTANCE) continue;
+            
             const key = getCellKey(node.x, node.y);
             
             for (let dx = 0; dx <= 1; dx++) {
@@ -408,8 +484,8 @@ if (canvas) {
                             ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.4})`;
                             ctx.lineWidth = 1 + avgEnergy;
                             ctx.beginPath();
-                            ctx.moveTo(node.x, node.y);
-                            ctx.lineTo(other.x, other.y);
+                            ctx.moveTo(ix, iy);
+                            ctx.lineTo(other.x | 0, other.y | 0);
                             ctx.stroke();
                             
                             if (avgEnergy > 0.6 || avgActivity > 0.3) {
@@ -417,8 +493,8 @@ if (canvas) {
                                 ctx.strokeStyle = getAccentRGBA(energyOpacity * 0.6);
                                 ctx.lineWidth = 2 + avgEnergy * 2;
                                 ctx.beginPath();
-                                ctx.moveTo(node.x, node.y);
-                                ctx.lineTo(other.x, other.y);
+                                ctx.moveTo(ix, iy);
+                                ctx.lineTo(other.x | 0, other.y | 0);
                                 ctx.stroke();
                                 ctx.lineWidth = 1;
                             }
@@ -430,8 +506,21 @@ if (canvas) {
     }
     
     let lastTime = performance.now();
+    let isTabVisible = true;
+    
+    document.addEventListener('visibilitychange', () => {
+        isTabVisible = !document.hidden;
+        if (isTabVisible) {
+            lastTime = performance.now();
+        }
+    });
     
     function animate(currentTime) {
+        if (!isTabVisible) {
+            animationId = requestAnimationFrame(animate);
+            return;
+        }
+        
         const deltaTime = currentTime - lastTime;
         lastTime = currentTime;
         
@@ -472,15 +561,6 @@ if (canvas) {
     resize();
     window.addEventListener('resize', resize);
     animationId = requestAnimationFrame(animate);
-    
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            cancelAnimationFrame(animationId);
-        } else {
-            lastTime = performance.now();
-            animationId = requestAnimationFrame(animate);
-        }
-    });
 }
 
 // ===== LIVING INK BLOT EFFECT (High Performance) =====
@@ -835,7 +915,7 @@ document.addEventListener('keydown', (e) => {
     
     switch(key) {
         case 'n':
-            if (nodes.length < MAX_NODES + 20) {
+            if (nodes.length < 100) {
                 const newNode = new Node();
                 newNode.reset(cursorX, cursorY);
                 newNode.fire();
