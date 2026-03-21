@@ -792,11 +792,11 @@ function setupCrypticEffect(element, config = {}) {
         speed = 40,
         stagger = 2,
         initialDelay = 0,
-        startEncrypted = false
+        startEncrypted = false,
+        charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*"
     } = config;
 
     const originalHTML = element.innerHTML;
-    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
     let isRolling = false;
     let isDecoded = !startEncrypted;
 
@@ -896,7 +896,11 @@ document.querySelectorAll('.block-title').forEach(title => {
 });
 
 document.querySelectorAll('.title-word').forEach(word => {
-    setupCrypticEffect(word, { speed: 30, stagger: 2 });
+    setupCrypticEffect(word, { 
+        speed: 30, 
+        stagger: 2,
+        charset: "Λⲃ⊂◖Ξ╒⟒⊦ǀ⌡⋉⌊⋈⊓⎔☧⍜Ɽ⟆⊺⋃∨Ⱳ⨉⋎⦚0123456789@#$%&*"
+    });
 });
 
 // ===== SMOOTH SCROLL =====
