@@ -775,6 +775,35 @@ projectCards.forEach((card, index) => {
     });
 });
 
+// ===== FEATURED PROJECT CARDS - Horizontal Scroll Animation =====
+const featuredCards = document.querySelectorAll('.project-card-featured');
+
+featuredCards.forEach((card, index) => {
+    card.style.transitionDelay = `${index * 120}ms`;
+});
+
+const featuredObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('card-visible');
+            featuredObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+featuredCards.forEach(card => featuredObserver.observe(card));
+
+// Smooth horizontal scroll with mouse wheel
+const scrollWrapper = document.querySelector('.project-scroll-wrapper');
+if (scrollWrapper) {
+    scrollWrapper.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            e.preventDefault();
+            scrollWrapper.scrollLeft += e.deltaY * 1.5;
+        }
+    }, { passive: false });
+}
+
 // ===== CRYPTIC DECODING EFFECT (Optimized) =====
 const crypticObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
