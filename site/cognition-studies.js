@@ -19,7 +19,7 @@ function arrow(d) {
 }
 
 function illustration(name, x = 45, y = 0, width = 330, height = 215) {
-  const filename = name === 'neurons' ? 'neuron.png' : `cognition-${name}-v4.png`;
+  const filename = name === 'neurons' ? 'neuron.webp' : `cognition-${name}-v4.webp`;
   const source = new URL(`./assets/${filename}`, import.meta.url).href;
   return `<image href="${source}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/>`;
 }

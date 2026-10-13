@@ -1,0 +1,253 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "dpr": 1,
+  "visibility": "visible",
+  "trials": [
+    {
+      "durationMs": 12057,
+      "maxScroll": 11954,
+      "methods": {
+        "animate": {
+          "count": 720,
+          "totalMs": 248.7,
+          "meanMs": 0.345,
+          "p50Ms": 0.3,
+          "p95Ms": 1,
+          "maxMs": 2.1
+        },
+        "drawRoutes": {
+          "count": 720,
+          "totalMs": 65.5,
+          "meanMs": 0.091,
+          "p50Ms": 0.1,
+          "p95Ms": 0.2,
+          "maxMs": 0.4
+        },
+        "resize": {
+          "count": 0,
+          "totalMs": 0,
+          "meanMs": 0,
+          "p50Ms": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        },
+        "refresh": {
+          "count": 720,
+          "totalMs": 22.8,
+          "meanMs": 0.032,
+          "p50Ms": 0,
+          "p95Ms": 0.1,
+          "maxMs": 0.2
+        },
+        "navigate": {
+          "count": 0,
+          "totalMs": 0,
+          "meanMs": 0,
+          "p50Ms": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        }
+      },
+      "animationLayoutReads": 0,
+      "frameIntervals": {
+        "count": 721,
+        "totalMs": 12024.2,
+        "meanMs": 16.677,
+        "p50Ms": 16.7,
+        "p95Ms": 16.8,
+        "maxMs": 24.9
+      },
+      "framesOver25Ms": 0,
+      "longFrames": {
+        "count": 0,
+        "totalMs": 0,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "maxMs": 0
+      },
+      "longFrameForcedLayoutMs": 0,
+      "delays": [],
+      "worstLongFrames": []
+    },
+    {
+      "durationMs": 12050,
+      "maxScroll": 11954,
+      "methods": {
+        "animate": {
+          "count": 724,
+          "totalMs": 232.6,
+          "meanMs": 0.321,
+          "p50Ms": 0.3,
+          "p95Ms": 1,
+          "maxMs": 1.4
+        },
+        "drawRoutes": {
+          "count": 724,
+          "totalMs": 57.6,
+          "meanMs": 0.08,
+          "p50Ms": 0.1,
+          "p95Ms": 0.2,
+          "maxMs": 0.3
+        },
+        "resize": {
+          "count": 0,
+          "totalMs": 0,
+          "meanMs": 0,
+          "p50Ms": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        },
+        "refresh": {
+          "count": 724,
+          "totalMs": 22.4,
+          "meanMs": 0.031,
+          "p50Ms": 0,
+          "p95Ms": 0.1,
+          "maxMs": 0.2
+        },
+        "navigate": {
+          "count": 0,
+          "totalMs": 0,
+          "meanMs": 0,
+          "p50Ms": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        }
+      },
+      "animationLayoutReads": 0,
+      "frameIntervals": {
+        "count": 725,
+        "totalMs": 12016.9,
+        "meanMs": 16.575,
+        "p50Ms": 16.7,
+        "p95Ms": 16.8,
+        "maxMs": 24.7
+      },
+      "framesOver25Ms": 0,
+      "longFrames": {
+        "count": 0,
+        "totalMs": 0,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "maxMs": 0
+      },
+      "longFrameForcedLayoutMs": 0,
+      "delays": [],
+      "worstLongFrames": []
+    },
+    {
+      "durationMs": 12054,
+      "maxScroll": 11954,
+      "methods": {
+        "animate": {
+          "count": 719,
+          "totalMs": 248.8,
+          "meanMs": 0.346,
+          "p50Ms": 0.3,
+          "p95Ms": 1,
+          "maxMs": 1.8
+        },
+        "drawRoutes": {
+          "count": 719,
+          "totalMs": 69.3,
+          "meanMs": 0.096,
+          "p50Ms": 0.1,
+          "p95Ms": 0.2,
+          "maxMs": 0.4
+        },
+        "resize": {
+          "count": 0,
+          "totalMs": 0,
+          "meanMs": 0,
+          "p50Ms": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        },
+        "refresh": {
+          "count": 719,
+          "totalMs": 23.1,
+          "meanMs": 0.032,
+          "p50Ms": 0,
+          "p95Ms": 0.1,
+          "maxMs": 0.2
+        },
+        "navigate": {
+          "count": 0,
+          "totalMs": 0,
+          "meanMs": 0,
+          "p50Ms": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        }
+      },
+      "animationLayoutReads": 0,
+      "frameIntervals": {
+        "count": 720,
+        "totalMs": 12021,
+        "meanMs": 16.696,
+        "p50Ms": 16.7,
+        "p95Ms": 16.8,
+        "maxMs": 25
+      },
+      "framesOver25Ms": 0,
+      "longFrames": {
+        "count": 0,
+        "totalMs": 0,
+        "meanMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "maxMs": 0
+      },
+      "longFrameForcedLayoutMs": 0,
+      "delays": [],
+      "worstLongFrames": []
+    }
+  ],
+  "interactions": {
+    "animate": {
+      "count": 22,
+      "totalMs": 23.1,
+      "meanMs": 1.05,
+      "p50Ms": 1,
+      "p95Ms": 1.7,
+      "maxMs": 1.9
+    },
+    "drawRoutes": {
+      "count": 22,
+      "totalMs": 0.1,
+      "meanMs": 0.005,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "maxMs": 0.1
+    },
+    "resize": {
+      "count": 2,
+      "totalMs": 3.5,
+      "meanMs": 1.75,
+      "p50Ms": 1.8,
+      "p95Ms": 1.8,
+      "maxMs": 1.8
+    },
+    "refresh": {
+      "count": 40,
+      "totalMs": 1.1,
+      "meanMs": 0.027,
+      "p50Ms": 0,
+      "p95Ms": 0.1,
+      "maxMs": 0.1
+    },
+    "navigate": {
+      "count": 19,
+      "totalMs": 3.6,
+      "meanMs": 0.189,
+      "p50Ms": 0.2,
+      "p95Ms": 0.4,
+      "maxMs": 0.4
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "dpr": 1,
+  "visibility": "visible",
+  "layerHint": false,
+  "trials": [],
+  "interactions": {
+    "animate": {
+      "count": 22,
+      "totalMs": 35.6,
+      "meanMs": 1.618,
+      "p50Ms": 1.5,
+      "p95Ms": 2.9,
+      "maxMs": 3.5
+    },
+    "drawRoutes": {
+      "count": 22,
+      "totalMs": 0.3,
+      "meanMs": 0.014,
+      "p50Ms": 0,
+      "p95Ms": 0.1,
+      "maxMs": 0.1
+    },
+    "resize": {
+      "count": 26,
+      "totalMs": 30.2,
+      "meanMs": 1.162,
+      "p50Ms": 0.6,
+      "p95Ms": 1.9,
+      "maxMs": 12.6
+    },
+    "refresh": {
+      "count": 64,
+      "totalMs": 1.4,
+      "meanMs": 0.022,
+      "p50Ms": 0,
+      "p95Ms": 0.1,
+      "maxMs": 0.2
+    },
+    "navigate": {
+      "count": 19,
+      "totalMs": 26.7,
+      "meanMs": 1.405,
+      "p50Ms": 0.8,
+      "p95Ms": 12.7,
+      "maxMs": 12.7
+    }
+  }
+}

@@ -1,12 +1,12 @@
 import { initializeSketchbook, connectNotes } from './sketchbook.js?v=11';
-import { ThoughtScene } from './thought-scene.js?v=13';
-import { lateralBrainSketch, dorsalBrainSketch, mindSketch, imagerySketch, recallMindSketch, embodiedMindSketch, probabilitySketch, latentSpaceSketch, latentManifoldSketch } from './cognition-studies.js?v=5';
+import { ThoughtScene } from './thought-scene.js?v=14';
+import { lateralBrainSketch, dorsalBrainSketch, mindSketch, imagerySketch, recallMindSketch, embodiedMindSketch, probabilitySketch, latentSpaceSketch, latentManifoldSketch } from './cognition-studies.js?v=6';
 import { initializeCipher } from './cipher.js?v=4';
 
 export async function initializeThoughtspace() {
   const artworkReady = Promise.allSettled(['lateral', 'dorsal', 'medial'].map(name => {
     const image = new Image();
-    image.src = new URL(`./assets/cognition-${name}-v4.png`, import.meta.url).href;
+    image.src = new URL(`./assets/cognition-${name}-v4.webp`, import.meta.url).href;
     return image.decode();
   })).then(results => {
     document.documentElement.dataset.cognitiveArt = results.every(result => result.status === 'fulfilled') ? 'ready' : 'partial';

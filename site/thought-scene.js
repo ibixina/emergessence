@@ -10,11 +10,13 @@ export class ThoughtScene {
     this.cover = hero.querySelector('.thought-cover-page');
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     this.frame = 0;
+    this.resizeFrame = 0;
     this.camera = null;
     this.keyboardFocus = false;
     this.navigationTarget = null;
     this.refresh = this.refresh.bind(this);
     this.resize = this.resize.bind(this);
+    this.scheduleResize = this.scheduleResize.bind(this);
     this.animate = this.animate.bind(this);
     this.stops = [{ source:hero, page:this.cover, anchor:'top', cover:true }, ...[...document.querySelectorAll('.thought-stop')].map((source, index) => {
       const page = source.querySelector('.thought-cluster');
@@ -51,6 +53,10 @@ export class ThoughtScene {
       links.innerHTML = '<a href="#about">about</a><a href="#research">questions</a><a href="#projects">experiments</a><a href="#contact">say hello ↗</a>';
       stop.page.append(links);
     });
+    this.stops.forEach(stop => {
+      stop.drawing = stop.page.querySelector(stop.cover ? '.thought-cover-neurons .study-sketch' : '.working-study .study-sketch, .method-brain .study-sketch');
+      stop.connections = [...stop.page.querySelectorAll('.notebook-connections')].map(svg => svg.parentElement);
+    });
     this.stage = document.createElement('div');
     this.stage.className = 'thought-stage';
     this.stage.innerHTML = '<canvas class="thought-route" aria-hidden="true"></canvas><div class="thought-perspective"><div class="thought-world"></div></div>';
@@ -59,8 +65,9 @@ export class ThoughtScene {
     this.perspective = this.stage.querySelector('.thought-perspective');
     this.canvas = this.stage.querySelector('canvas');
     this.context = this.canvas.getContext('2d');
+    Object.assign(this.stage.dataset, { cameraX:'0', cameraY:'0', cameraYaw:'0', renderer:'perspective-notebook' });
     window.addEventListener('scroll', this.refresh, { passive:true });
-    window.addEventListener('resize', this.resize, { passive:true });
+    window.addEventListener('resize', this.scheduleResize, { passive:true });
     window.addEventListener('hashchange', () => this.navigate(location.hash));
     document.addEventListener('keydown', event => {
       if (event.key === 'Tab') this.keyboardFocus = true;
@@ -89,10 +96,23 @@ export class ThoughtScene {
         window.scrollTo({ top:stop.start + stop.entrance + pan, behavior:'instant' });
       });
     });
-    document.querySelectorAll('details').forEach(entry => entry.addEventListener('toggle', this.resize));
+    document.querySelectorAll('details').forEach(entry => entry.addEventListener('toggle', this.scheduleResize));
     this.reducedMotion.addEventListener('change', () => { this.mount(); this.resize(); });
-    this.observer = new ResizeObserver(this.resize);
-    this.stops.forEach(stop => this.observer.observe(stop.page));
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        cancelAnimationFrame(this.frame);
+        this.frame = 0;
+        this.lastTime = 0;
+      } else this.refresh();
+    });
+    this.observer = new ResizeObserver(entries => {
+      if (entries.some(entry => {
+        const stop = this.stops.find(stop => stop.page === entry.target);
+        const size = entry.borderBoxSize?.[0];
+        return size && (Math.abs(size.inlineSize - stop.width) >= 1 || Math.abs(size.blockSize - stop.height) >= 1);
+      })) this.scheduleResize();
+    });
+    this.stops.forEach(stop => this.observer.observe(stop.page, { box:'border-box' }));
     this.mount();
     this.resize();
   }
@@ -115,6 +135,9 @@ export class ThoughtScene {
         stop.page.classList.remove('thought-plane');
         stop.page.removeAttribute('style');
         stop.page.inert = false;
+        stop.visible = undefined;
+        stop.transform = null;
+        stop.opacity = null;
         stop.source.style.height = '';
         if (stop.heading) stop.section.prepend(stop.heading);
         if (stop.bridge) stop.bridge.hidden = false;
@@ -129,7 +152,14 @@ export class ThoughtScene {
     }
   }
 
+  scheduleResize() {
+    if (!this.enabled || this.resizeFrame) return;
+    this.resizeFrame = requestAnimationFrame(this.resize);
+  }
+
   resize() {
+    cancelAnimationFrame(this.resizeFrame);
+    this.resizeFrame = 0;
     if (!this.enabled) return;
     const old = this.active;
     const previousWidth = this.width;
@@ -146,9 +176,13 @@ export class ThoughtScene {
       this.canvas.height = height;
       this.context?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    this.stops.forEach((stop, index) => {
+    // Apply widths together so the subsequent measurements share one layout.
+    this.stops.forEach(stop => {
       stop.page.style.width = `${stop.cover ? this.width : Math.min(1120, this.width - Math.min(100, this.width * .12))}px`;
       if (stop.cover) stop.page.style.height = `${this.height}px`;
+    });
+    this.stops.forEach((stop, index) => {
+      stop.width = stop.page.offsetWidth;
       stop.height = stop.page.offsetHeight;
       stop.z = index * this.focal * 2.8;
       stop.overflow = stop.cover ? 0 : Math.max(0, stop.height - this.height + 105);
@@ -157,6 +191,9 @@ export class ThoughtScene {
       stop.departure = index === this.stops.length - 1 ? 0 : this.height * .72;
       stop.duration = stop.entrance + stop.reading + stop.departure;
       stop.top = stop.cover ? 0 : Math.max(45, (this.height - stop.height) / 2);
+      stop.transform = null;
+    });
+    this.stops.forEach(stop => {
       stop.source.style.height = `${stop.duration}px`;
     });
     const last = this.stops.at(-1);
@@ -165,16 +202,17 @@ export class ThoughtScene {
     const transform = this.world.style.transform;
     this.world.style.transform = 'translateZ(0px)';
     this.stops.forEach(stop => {
-      const drawing = stop.page.querySelector(stop.cover ? '.thought-cover-neurons .study-sketch' : '.working-study .study-sketch, .method-brain .study-sketch');
       const page = stop.page.getBoundingClientRect();
-      const figure = drawing?.getBoundingClientRect();
-      const scale = page.width / stop.page.offsetWidth;
+      const figure = stop.drawing?.getBoundingClientRect();
+      const scale = page.width / stop.width;
       stop.node = figure && scale > 0 ? [
-        (figure.left + figure.width / 2 - page.left) / scale - stop.page.offsetWidth / 2,
+        (figure.left + figure.width / 2 - page.left) / scale - stop.width / 2,
         (figure.top + figure.height / 2 - page.top) / scale + stop.top - this.height * .44,
         stop.z
       ] : [0, 0, stop.z];
     });
+    // Connections use native page coordinates; camera movement never changes them.
+    this.stops.forEach(stop => stop.connections.forEach(container => container.dispatchEvent(new Event('notebook-layout'))));
     this.world.style.transform = transform;
     this.routes = this.stops.slice(0, -1).map((stop, index) => {
       const next = this.stops[index + 1];
@@ -202,7 +240,7 @@ export class ThoughtScene {
       document.getElementById(hash.replace(/^#/, ''))?.scrollIntoView({ behavior });
       return;
     }
-    this.resize();
+    if (this.resizeFrame) this.resize();
     this.navigationTarget = stop;
     const offset = stop.start + stop.entrance - (stop.cover ? stop.start : 0);
     window.scrollTo({ top:Math.max(0, offset), behavior });
@@ -211,7 +249,7 @@ export class ThoughtScene {
   }
 
   refresh() {
-    if (!this.enabled) return;
+    if (!this.enabled || document.hidden) return;
     const offset = scrollY;
     let index = 0;
     while (index < this.stops.length - 1 && offset >= this.stops[index + 1].start) index++;
@@ -229,27 +267,27 @@ export class ThoughtScene {
 
   animate(time) {
     this.frame = 0;
-    if (!this.enabled) return;
+    if (!this.enabled || document.hidden) return;
     const elapsed = this.lastTime ? Math.min(50, time - this.lastTime) : 16;
     this.lastTime = time;
     this.camera += (this.target - this.camera) * (1 - Math.exp(-elapsed / 90));
     this.world.style.transform = `translateZ(${this.focal + this.camera}px)`;
     this.stage.dataset.cameraDepth = Math.round(this.camera);
-    this.stage.dataset.cameraX = '0';
-    this.stage.dataset.cameraY = '0';
-    this.stage.dataset.cameraYaw = '0';
-    this.stage.dataset.renderer = 'perspective-notebook';
     for (const stop of this.stops) {
       const depth = stop.z - this.camera;
       const opacity = smooth(this.focal * .3, this.focal * .72, depth) * (1 - smooth(this.focal * 1.7, this.focal * 3.6, depth));
-      const pan = clamp((scrollY - stop.start - stop.entrance) / Math.max(1, stop.overflow)) * stop.overflow;
-      const y = stop.top + stop.height / 2 - this.height * .44 - pan;
-      stop.page.style.transform = `translate3d(${-stop.page.offsetWidth / 2}px,${stop.cover ? -this.height / 2 + this.height * .06 : y - stop.height / 2}px,${-stop.z}px)`;
-      stop.page.style.opacity = opacity.toFixed(3);
-      stop.page.style.visibility = opacity < .015 ? 'hidden' : 'visible';
-      if (opacity >= .015 && !stop.visible) stop.page.querySelectorAll('.notebook-connections').forEach(svg => svg.parentElement.dispatchEvent(new Event('notebook-layout')));
-      stop.visible = opacity >= .015;
-      stop.page.inert = opacity < .25;
+      const visible = opacity >= .015;
+      if (visible !== stop.visible) stop.page.style.visibility = visible ? 'visible' : 'hidden';
+      stop.visible = visible;
+      const inert = opacity < .25;
+      if (inert !== stop.page.inert) stop.page.inert = inert;
+      if (!visible) continue;
+      const pan = clamp(scrollY - stop.start - stop.entrance, 0, stop.overflow);
+      const y = stop.cover ? -this.height * .44 : stop.top - this.height * .44 - pan;
+      const transform = `translate3d(${-stop.width / 2}px,${y}px,${-stop.z}px)`;
+      if (transform !== stop.transform) stop.page.style.transform = stop.transform = transform;
+      const alpha = opacity.toFixed(3);
+      if (alpha !== stop.opacity) stop.page.style.opacity = stop.opacity = alpha;
       stop.page.dataset.depth = Math.round(depth);
     }
     this.drawRoutes();
@@ -260,27 +298,31 @@ export class ThoughtScene {
   drawRoutes() {
     if (!this.context) return;
     const ctx = this.context;
-    ctx.clearRect(0, 0, this.width, this.height);
+    if (this.routeVisible) ctx.clearRect(0, 0, this.width, this.height);
     const readDistance = Math.abs(this.active.z - this.focal - this.camera) / this.focal;
     const traveling = smooth(.05, .5, readDistance);
-    if (traveling < .01) return;
+    this.routeVisible = traveling >= .01;
+    if (!this.routeVisible) return;
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#735986';
     for (const route of this.routes) {
-      let previous = null;
+      if (route.at(-1)[2] - this.camera < 100 || route[0][2] - this.camera > this.focal * 5) continue;
+      let previousX, previousY;
       for (const [x,y,z] of route) {
         const depth = z - this.camera;
-        if (depth < 100 || depth > this.focal * 5) { previous = null; continue; }
-        const point = [this.width / 2 + x * this.focal / depth, this.height * .44 + y * this.focal / depth];
-        if (previous) {
+        if (depth < 100 || depth > this.focal * 5) { previousX = undefined; continue; }
+        const pointX = this.width / 2 + x * this.focal / depth;
+        const pointY = this.height * .44 + y * this.focal / depth;
+        if (previousX !== undefined) {
           ctx.globalAlpha = traveling * .42 * smooth(100, 400, depth) * (1 - smooth(this.focal * 2, this.focal * 5, depth));
           ctx.lineWidth = clamp(this.focal / depth, .45, 1.1);
           ctx.beginPath();
-          ctx.moveTo(...previous);
-          ctx.lineTo(...point);
+          ctx.moveTo(previousX, previousY);
+          ctx.lineTo(pointX, pointY);
           ctx.stroke();
         }
-        previous = point;
+        previousX = pointX;
+        previousY = pointY;
       }
     }
     ctx.globalAlpha = 1;
