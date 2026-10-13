@@ -63,8 +63,8 @@ export function initializeSketchbook({ cover = true, connections = true } = {}) 
   if (cover) {
     const hero = document.querySelector('.hero');
     const identity = hero.querySelector('.hero-identity');
-    identity.querySelector('.glyph').textContent = 'Shishir Shrestha';
-    identity.querySelector('.glyph').setAttribute('aria-label', 'Shishir Shrestha');
+    identity.querySelector('.glyph').textContent = 'Shishir';
+    identity.querySelector('.glyph').setAttribute('aria-label', 'Shishir');
     identity.querySelector('.byline').textContent = 'computational cognitive science';
     hero.querySelector('.disciplines').innerHTML = 'neuroscience / AI / psychology<br><span>notes, models, experiments</span>';
     const art = document.getElementById('notebook-art');

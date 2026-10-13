@@ -1,6 +1,6 @@
 # Emergessence
 
-Shishir Shrestha's portfolio, presented as a connected sketchbook of cognition, brain studies, models, and experiments. Scrolling travels forward through the notes and drawings together, with pauses to read each spread.
+Shishir's portfolio, presented as a connected sketchbook of cognition, brain studies, models, and experiments. Scrolling travels forward through the notes and drawings together, with pauses to read each spread.
 
 Serve the repository root with any static HTTP server. For local development:
 

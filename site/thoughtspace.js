@@ -38,7 +38,7 @@ export async function initializeThoughtspace() {
     <figure class="thought-cover-study"><span>brain ↔ mind?</span>${lateralBrainSketch()}<figcaption>structure becomes experience… how?</figcaption></figure>
     <figure class="thought-cover-neurons">${mindSketch()}<figcaption>one connection → many possibilities</figcaption></figure>
     <div class="thought-aside"><span>one thought leads<br>into another.</span><svg viewBox="0 0 170 80" aria-hidden="true"><path d="M9 14 C51 4 65 78 151 57 M142 50 L151 57 L139 64"/></svg></div>
-    <div class="thought-signature"><h1 class="glyph" aria-label="Shishir Shrestha">Shishir Shrestha</h1><p class="byline">computational cognitive science</p></div>
+    <div class="thought-signature"><h1 class="glyph" aria-label="Shishir">Shishir</h1><p class="byline">computational cognitive science</p></div>
     <a class="thought-enter" href="#first-connection"><span>follow the connections</span><span aria-hidden="true">↓</span></a>
     <span class="thought-folio">notes in the making / 01</span>
   </div></div><span id="first-connection" class="thought-entry-point" aria-hidden="true"></span>`;
