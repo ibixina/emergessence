@@ -1,439 +1,95 @@
 <!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta
-            name="description"
-            content="Portfolio of a computational cognitive scientist exploring the emergence of intelligence through research and experimentation."
-        />
+<html lang="en" data-design="thoughtspace">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf9f5">
+  <meta name="description" content="Shishir Shrestha — computational cognitive science, artificial intelligence, and the emergence of intelligent behavior.">
+  <title>emergessence — Shishir Shrestha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site/base.css">
+  <link rel="stylesheet" href="site/sketchbook.css">
+  <link rel="stylesheet" href="site/thoughtspace.css">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <script type="module" src="script.js?v=2"></script>
+</head>
+<body>
+  <a class="skip-link" href="#about">Skip to content</a>
+  <main id="portfolio">
+    <section class="hero" id="top" aria-label="Shishir Shrestha">
+      <header class="masthead">
+        <a class="wordmark" href="#top">emergessence</a>
+        <p class="disciplines">neuroscience / AI / psychology</p>
+      </header>
+      <div class="notebook-art" id="notebook-art" hidden></div>
+      <div class="hero-identity">
+        <h1 class="glyph">Shishir Shrestha</h1>
+        <p class="byline">computational cognitive science</p>
+      </div>
+      <div class="hero-footnote">
+        <span>COMPUTATIONAL COGNITIVE SCIENCE</span>
+        <a class="scroll-prompt" href="#about"><span id="scroll-label">SCROLL TO ENTER</span><span class="scroll-arrow" aria-hidden="true">↓</span></a>
+      </div>
+    </section>
 
-        <!-- Performance optimizations -->
-        <meta name="theme-color" content="#ffffff" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Roboto+Mono:wght@400;700&display=swap"
-            rel="stylesheet"
-        />
+    <nav class="primary-navigation" aria-label="Portfolio sections">
+      <a href="#about"><span class="nav-number">[01]</span> ABOUT</a>
+      <a href="#research"><span class="nav-number">[02]</span> RESEARCH</a>
+      <a href="#projects"><span class="nav-number">[03]</span> PROJECTS</a>
+      <a href="#contact"><span class="nav-number">[04]</span> CONTACT</a>
+    </nav>
 
-        <title>emergessence</title>
-        <link rel="stylesheet" href="styles.css" />
-    </head>
-    <body>
-        <canvas id="neural-canvas"></canvas>
+    <div class="content">
+      <section class="portfolio-section about-section" id="about">
+        <div class="section-heading"><span class="section-number">01</span><span class="section-name">ABOUT</span><span class="section-note">COMPUTATION → COGNITION</span></div>
+        <div class="about-layout">
+          <div class="about-statement"><h2>INVESTIGATING THE<br>COMPUTATIONAL MIND.</h2><p class="lead">Exploring how intelligent behavior emerges from computational processes, bridging neuroscience, AI, and cognitive psychology.</p></div>
+          <div class="about-copy"><p>My research focuses on the fundamental principles underlying cognition—from perception and learning to decision-making and consciousness.</p><p>Through computational modeling and behavioral experiments, I investigate how complex mental phenomena arise from the interaction of simpler components.</p><p>I combine dynamical systems, information theory, and machine learning to build models that capture cognitive richness.</p></div>
+        </div>
+        <div class="about-specifications">
+          <div><h3>RESEARCH_FOCUS</h3><ul><li>Computational modeling</li><li>Neural networks</li><li>Cognitive architecture</li><li>Emergent behavior</li></ul></div>
+          <div><h3>TECHNICAL_STACK</h3><ul><li>Python / C++ / CUDA / Rust</li><li>PyTorch / TensorFlow / JAX</li><li>JavaScript / TypeScript / Go</li><li>Statistical analysis / R / Scala</li></ul></div>
+        </div>
+      </section>
 
-        <header class="header">
-            <div class="header-inner">
-                <div class="header-line"></div>
-                <h1 class="main-title">
-                    <span class="title-word" data-text="⟆⊦ǀ⟆⊦ǀⱤ">⟆⊦ǀ⟆⊦ǀⱤ</span>
-                </h1>
-                <div class="header-line"></div>
-                <p class="subtitle">
-                    Artificial Intelligence / Machine Learning / Neuroscience
-                </p>
-            </div>
-        </header>
+      <section class="portfolio-section research-section" id="research">
+        <div class="section-heading"><span class="section-number">02</span><span class="section-name">RESEARCH</span><span class="section-note">SELECTED INVESTIGATIONS</span></div>
+        <div class="research-index">
+          <details class="research-entry" open>
+            <summary><span class="entry-number">01</span><h2>ASSOCIATIVE MEMORY<br>MANIFOLD</h2><span class="research-status">ACTIVE</span><span class="entry-toggle" aria-hidden="true"></span></summary>
+            <div class="research-body"><p>Hierarchical representations in artificial neural networks and their correspondence to biological neural systems.</p><p class="research-tags">ASSOCIATIVE MEMORY / PERCEPTION / KNOWLEDGE REPRESENTATION</p></div>
+          </details>
+          <details class="research-entry">
+            <summary><span class="entry-number">02</span><h2>MENTAL IMAGERY<br>& SIMULATION</h2><span class="research-status">COMPLETED</span><span class="entry-toggle" aria-hidden="true"></span></summary>
+            <div class="research-body"><p>The role of prediction errors in learning and how the brain constructs models of sensory input.</p><p class="research-tags">PREDICTIVE CODING / ACTIVE INFERENCE / SIMULATION</p></div>
+          </details>
+          <details class="research-entry">
+            <summary><span class="entry-number">03</span><h2>COGNITION<br>& ENVIRONMENT</h2><span class="research-status">ONGOING</span><span class="entry-toggle" aria-hidden="true"></span></summary>
+            <div class="research-body"><p>Computational models capturing bottom-up and top-down influences on information selection.</p><p class="research-tags">COGNITION / REINFORCEMENT LEARNING / EMERGENT BEHAVIOR</p></div>
+          </details>
+        </div>
+      </section>
 
-        <nav class="nav">
-            <a href="#section-01" class="nav-item">[01] ABOUT</a>
-            <a href="#section-02" class="nav-item">[02] RESEARCH</a>
-            <a href="#section-03" class="nav-item">[03] PROJECTS</a>
-            <a href="#section-04" class="nav-item">[04] CONTACT</a>
-        </nav>
+      <section class="portfolio-section projects-section" id="projects">
+        <div class="section-heading"><span class="section-number">03</span><span class="section-name">PROJECTS</span><span class="section-note">MODELS & EXPERIMENTS</span></div>
+        <div class="projects-grid">
+          <article class="project"><div class="project-meta"><span>PROJECT_001</span><span>PYTHON / AUTOML</span></div><h2>ACTIVATION FUNCTION<br>OPTIMIZATION</h2><p>Genetic programming to evolve novel neural network activation functions. GP evolution, DARTS, and hand-designed activations with mathematical rigor.</p><a href="https://github.com/ibixina/ActivationFunctions" target="_blank" rel="noopener noreferrer" aria-label="Activation function optimization repository">EXPLORE REPOSITORY <span aria-hidden="true">↗</span></a></article>
+          <article class="project"><div class="project-meta"><span>PROJECT_002</span><span>PYTORCH / TENSORFLOW</span></div><h2>NEURAL NETWORK<br>VISUALIZER</h2><p>Real-time visualization of activations and weights, with color-coded displays and step-by-step training.</p><a href="https://github.com/ibixina/neural-viz" target="_blank" rel="noopener noreferrer" aria-label="Neural network visualizer repository">EXPLORE REPOSITORY <span aria-hidden="true">↗</span></a></article>
+          <article class="project"><div class="project-meta"><span>PROJECT_003</span><span>JAVASCRIPT / PYTHON</span></div><h2>CLIMBING GAME<br>RL ENVIRONMENT</h2><p>A physics-based climbing game and custom reinforcement learning environment, with a JavaScript–Python bridge for experimentation.</p><a href="https://github.com/ibixina/climbinggame" target="_blank" rel="noopener noreferrer" aria-label="Climbing game repository">EXPLORE REPOSITORY <span aria-hidden="true">↗</span></a></article>
+          <article class="project"><div class="project-meta"><span>PROJECT_004</span><span>PYTHON / DISTILLATION</span></div><h2>NEURAL NETWORK<br>COMPRESSION</h2><p>Compressing CNN teacher models into smaller students on CIFAR-100, with a modular training pipeline, layer-conditioning, and benchmarking.</p><a href="https://github.com/ibixina/neuralcompression" target="_blank" rel="noopener noreferrer" aria-label="Neural network compression repository">EXPLORE REPOSITORY <span aria-hidden="true">↗</span></a></article>
+          <article class="project"><div class="project-meta"><span>PROJECT_005</span><span>GO / SYSTEMS</span></div><h2>TERMINAL<br>VIDEO PLAYER</h2><p>Video rendered as ASCII art, with YouTube streaming, concurrent frame processing, automatic terminal detection, and cross-platform support.</p><a href="https://github.com/ibixina/terminalVideo" target="_blank" rel="noopener noreferrer" aria-label="Terminal video player repository">EXPLORE REPOSITORY <span aria-hidden="true">↗</span></a></article>
+          <article class="project"><div class="project-meta"><span>PROJECT_006</span><span>TYPESCRIPT / GAME DEV</span></div><h2>DIGILIFE</h2><p>A life simulation with data-driven architecture, career progression, education, relationships, and hidden gameplay pathways.</p><a href="https://github.com/ibixina/DigiLife" target="_blank" rel="noopener noreferrer" aria-label="DigiLife repository">EXPLORE REPOSITORY <span aria-hidden="true">↗</span></a></article>
+        </div>
+      </section>
 
-        <main class="container">
-            <!-- About Section -->
-            <section id="section-01" class="section">
-                <div class="section-marker">
-                    <span class="marker-number">01</span>
-                    <span class="marker-label">ABOUT</span>
-                </div>
-                <div class="section-content">
-                    <div class="content-block">
-                        <h2 class="block-title">
-                            INVESTIGATING THE<br />COMPUTATIONAL MIND
-                        </h2>
-                        <div class="text-columns">
-                            <div class="column">
-                                <p class="lead">
-                                    Exploring how intelligent behavior emerges
-                                    from computational processes, bridging
-                                    neuroscience, AI, and cognitive psychology.
-                                </p>
-                            </div>
-                            <div class="column">
-                                <p>
-                                    My research focuses on understanding
-                                    fundamental principles underlying
-                                    cognition—from perception and learning to
-                                    decision-making and consciousness.
-                                </p>
-                                <p>
-                                    Through computational modeling and
-                                    behavioral experiments, I investigate how
-                                    complex mental phenomena arise from the
-                                    interaction of simpler components.
-                                </p>
-                                <p>
-                                    I combine theoretical frameworks from
-                                    dynamical systems, information theory, and
-                                    machine learning to build models that
-                                    capture cognitive richness.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="specs-grid">
-                        <div class="spec-box">
-                            <div class="spec-header">RESEARCH_FOCUS</div>
-                            <ul class="spec-list">
-                                <li>→ Computational Modeling</li>
-                                <li>→ Neural Networks</li>
-                                <li>→ Cognitive Architecture</li>
-                                <li>→ Emergent Behavior</li>
-                                <li>→ Information Processing</li>
-                            </ul>
-                        </div>
-                        <div class="spec-box">
-                            <div class="spec-header">TECHNICAL_STACK</div>
-                            <ul class="spec-list">
-                                <li>→ Python / C++ / Cuda / Rust</li>
-                                <li>→ JavaScript / TypeScript / Go</li>
-                                <li>→ PyTorch / TensorFlow / JAX</li>
-                                <li>→ WebGPU / Stable Diffusion / ML</li>
-                                <li>→ Statistical Analysis / R / Scala</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Research Section -->
-            <section id="section-02" class="section">
-                <div class="section-marker">
-                    <span class="marker-number">02</span>
-                    <span class="marker-label">RESEARCH</span>
-                </div>
-                <div class="section-content">
-                    <div class="project-grid">
-                        <div class="project-card">
-                            <div class="card-header">
-                                <span class="card-id">PROJECT_001</span>
-                                <span class="card-status">ACTIVE</span>
-                            </div>
-                            <h3 class="card-title">
-                                ASSOCIATIVE MEMORY MANIFOLD
-                            </h3>
-                            <p class="card-desc">
-                                Hierarchical representations in artificial
-                                neural networks and their correspondence to
-                                biological neural systems.
-                            </p>
-                            <div class="card-tags">
-                                <span>#ASSOCIATIVE_MEMORY</span>
-                                <span>#PERCEPTION</span>
-                                <span>#KNOWLEDGE_REPRESENTATION</span>
-                                <span>#COMPUTATIONAL_MODELING</span>
-                            </div>
-                        </div>
-
-                        <div class="project-card">
-                            <div class="card-header">
-                                <span class="card-id">PROJECT_002</span>
-                                <span class="card-status">COMPLETED</span>
-                            </div>
-                            <h3 class="card-title">
-                                MENTAL IMAGERY AND SIMULATION
-                            </h3>
-                            <p class="card-desc">
-                                Role of prediction errors in learning and how
-                                the brain constructs models of sensory input.
-                            </p>
-                            <div class="card-tags">
-                                <span>#PREDICTIVE_CODING</span>
-                                <span>#ACTIVE_INFERENCE</span>
-                                <span>#SIMULATION</span>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="card-header">
-                                <span class="card-id">PROJECT_003</span>
-                                <span class="card-status">ONGOING</span>
-                            </div>
-                            <h3 class="card-title">
-                                COGNITION AND ENVIRONMENT
-                            </h3>
-                            <p class="card-desc">
-                                Computational models capturing bottom-up and
-                                top-down influences on information selection.
-                            </p>
-                            <div class="card-tags">
-                                <span>#COGNITION</span>
-                                <span>#REINFORCEMENT_LEARNING</span>
-                                <span>#EMERGENT_BEHAVIOR</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Projects Section -->
-            <section id="section-03" class="section section-projects">
-                <div class="section-marker">
-                    <span class="marker-number">04</span>
-                    <span class="marker-label">PROJECTS</span>
-                </div>
-                <div class="section-content">
-                    <div class="project-scroll-wrapper">
-                        <div class="project-scroll">
-                            <article class="project-card-featured">
-                                <div class="card-accent-bar"></div>
-                                <div class="card-header">
-                                    <span class="card-id">PROJECT_001</span>
-                                    <span class="card-status">PYTHON</span>
-                                </div>
-                                <h3 class="card-title">
-                                    ACTIVATION FUNCTION<br />OPTIMIZATION
-                                </h3>
-                                <p class="card-desc">
-                                    AutoML research using genetic programming to
-                                    evolve novel neural network activation
-                                    functions. Three search methodologies: GP
-                                    evolution, DARTS, and hand-designed
-                                    activations with mathematical rigor.
-                                </p>
-                                <div class="card-tags">
-                                    <span>#GENETIC_PROGRAMMING</span>
-                                    <span>#AUTOML</span>
-                                    <span>#PYTORCH</span>
-                                </div>
-                                <a
-                                    href="https://github.com/ibixina/ActivationFunctions"
-                                    class="card-link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >[VIEW REPO →]</a
-                                >
-                            </article>
-
-                            <article class="project-card-featured">
-                                <div class="card-accent-bar"></div>
-                                <div class="card-header">
-                                    <span class="card-id">PROJECT_002</span>
-                                    <span class="card-status">PYTHON</span>
-                                </div>
-                                <h3 class="card-title">
-                                    NEURAL NETWORK<br />VISUALIZER
-                                </h3>
-                                <p class="card-desc">
-                                    High-performance real-time visualization tool
-                                    supporting PyTorch and TensorFlow models with
-                                    color-coded activations, weight display, and
-                                    step-by-step training mode.
-                                </p>
-                                <div class="card-tags">
-                                    <span>#DEEP_LEARNING</span>
-                                    <span>#VISUALIZATION</span>
-                                    <span>#PYTORCH</span>
-                                </div>
-                                <a
-                                    href="https://github.com/ibixina/neural-viz"
-                                    class="card-link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >[VIEW REPO →]</a
-                                >
-                            </article>
-
-                            <article class="project-card-featured">
-                                <div class="card-accent-bar"></div>
-                                <div class="card-header">
-                                    <span class="card-id">PROJECT_003</span>
-                                    <span class="card-status">JS / PYTHON</span>
-                                </div>
-                                <h3 class="card-title">
-                                    CLIMBING GAME RL<br />ENVIRONMENT
-                                </h3>
-                                <p class="card-desc">
-                                    Physics-based 2D climbing game with OpenAI Gym
-                                    environment wrapper. Custom RL environment with
-                                    Selenium-based JS-Python bridge for
-                                    reinforcement learning research.
-                                </p>
-                                <div class="card-tags">
-                                    <span>#REINFORCEMENT_LEARNING</span>
-                                    <span>#PHYSICS</span>
-                                    <span>#GYMNASIUM</span>
-                                </div>
-                                <a
-                                    href="https://github.com/ibixina/climbinggame"
-                                    class="card-link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >[VIEW REPO →]</a
-                                >
-                            </article>
-
-                            <article class="project-card-featured">
-                                <div class="card-accent-bar"></div>
-                                <div class="card-header">
-                                    <span class="card-id">PROJECT_004</span>
-                                    <span class="card-status">PYTHON</span>
-                                </div>
-                                <h3 class="card-title">
-                                    NEURAL NETWORK<br />COMPRESSION
-                                </h3>
-                                <p class="card-desc">
-                                    Knowledge distillation research compressing
-                                    CNN teacher models into smaller students on
-                                    CIFAR-100. Modular training pipeline with
-                                    layer-conditioning and benchmarking.
-                                </p>
-                                <div class="card-tags">
-                                    <span>#KNOWLEDGE_DISTILLATION</span>
-                                    <span>#MODEL_COMPRESSION</span>
-                                    <span>#PYTORCH</span>
-                                </div>
-                                <a
-                                    href="https://github.com/ibixina/neuralcompression"
-                                    class="card-link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >[VIEW REPO →]</a
-                                >
-                            </article>
-
-                            <article class="project-card-featured">
-                                <div class="card-accent-bar"></div>
-                                <div class="card-header">
-                                    <span class="card-id">PROJECT_005</span>
-                                    <span class="card-status">GO</span>
-                                </div>
-                                <h3 class="card-title">
-                                    TERMINAL VIDEO<br />PLAYER
-                                </h3>
-                                <p class="card-desc">
-                                    Go application converting video to ASCII art
-                                    with YouTube streaming, concurrent frame
-                                    processing, automatic terminal detection, and
-                                    cross-platform compatibility.
-                                </p>
-                                <div class="card-tags">
-                                    <span>#GO</span>
-                                    <span>#SYSTEMS</span>
-                                    <span>#VIDEO_PROCESSING</span>
-                                </div>
-                                <a
-                                    href="https://github.com/ibixina/terminalVideo"
-                                    class="card-link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >[VIEW REPO →]</a
-                                >
-                            </article>
-
-                            <article class="project-card-featured">
-                                <div class="card-accent-bar"></div>
-                                <div class="card-header">
-                                    <span class="card-id">PROJECT_006</span>
-                                    <span class="card-status">TYPESCRIPT</span>
-                                </div>
-                                <h3 class="card-title">
-                                    DIGILIFE
-                                </h3>
-                                <p class="card-desc">
-                                    Life simulation game with data-driven
-                                    architecture, multi-path career progression,
-                                    education systems, relationship dynamics, and
-                                    hidden gameplay pathways built with vanilla
-                                    TypeScript.
-                                </p>
-                                <div class="card-tags">
-                                    <span>#TYPESCRIPT</span>
-                                    <span>#GAME_DEV</span>
-                                    <span>#STATE_MGMT</span>
-                                </div>
-                                <a
-                                    href="https://github.com/ibixina/DigiLife"
-                                    class="card-link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >[VIEW REPO →]</a
-                                >
-                            </article>
-                        </div>
-                    </div>
-                    <div class="scroll-hint">
-                        <span>← SCROLL →</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Contact Section -->
-            <section id="section-05" class="section">
-                <div class="section-marker">
-                    <span class="marker-number">05</span>
-                    <span class="marker-label">CONTACT</span>
-                </div>
-                <div class="section-content">
-                    <div class="contact-layout">
-                        <div class="contact-intro">
-                            <h2 class="block-title">LET'S CONNECT</h2>
-                            <p class="lead">
-                                Studying how intelligence emerges from
-                                computation. Open to collaborators working on
-                                the hard questions in AI, neuroscience, and
-                                cognitive science.
-                            </p>
-                        </div>
-                        <div class="contact-methods">
-                            <div class="contact-box">
-                                <div class="contact-label">EMAIL</div>
-                                <a
-                                    href="mailto:shis7ir@gmail.com"
-                                    class="contact-value"
-                                    >shis7ir@gmail.com</a
-                                >
-                            </div>
-                            <div class="contact-box">
-                                <div class="contact-label">GITHUB</div>
-                                <a
-                                    href="https://github.com/ibixina"
-                                    class="contact-value"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    >github.com/ibixina</a
-                                >
-                            </div>
-                            <div class="contact-box cv-box">
-                                <a href="files/Shrestha_Shishir_2026_Resume.pdf" class="cv-download" download>
-                                    <span>RESUME.PDF</span>
-                                    <span class="download-arrow">↓</span>
-                                </a>
-                            </div>
-                            <div class="contact-box cv-box">
-                                <a href="files/Shrestha_Shishir_2026_CV.pdf" class="cv-download" download>
-                                    <span>CV.PDF</span>
-                                    <span class="download-arrow">↓</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer class="footer">
-            <div class="footer-inner">
-                <div class="footer-content">
-                    <p>© 2026 ⟆⊦ǀ⟆⊦ǀⱤ / ALL RIGHTS RESERVED</p>
-                </div>
-            </div>
-        </footer>
-
-        <script src="script.js"></script>
-    </body>
+      <section class="portfolio-section contact-section" id="contact">
+        <div class="section-heading"><span class="section-number">04</span><span class="section-name">CONTACT</span><span class="section-note">LET’S CONNECT</span></div>
+        <div class="contact-layout"><div><h2>LET’S<br>EXPLORE.</h2><p>Studying how intelligence emerges from computation. Open to collaborators working on the hard questions in AI, neuroscience, and cognitive science.</p></div><div class="contact-links"><a class="contact-email" href="mailto:shis7ir@gmail.com">shis7ir@gmail.com <span aria-hidden="true">↗</span></a><a href="https://github.com/ibixina" target="_blank" rel="noopener noreferrer">github.com/ibixina <span aria-hidden="true">↗</span></a><a href="files/Shrestha_Shishir_2026_Resume.pdf" download>RESUME.PDF <span aria-hidden="true">↓</span></a><a href="files/Shrestha_Shishir_2026_CV.pdf" download>CV.PDF <span aria-hidden="true">↓</span></a></div></div>
+      </section>
+    </div>
+    <footer class="site-footer"><span>© 2026 SHISHIR SHRESTHA</span><a href="#top">BACK TO THE SURFACE ↑</a></footer>
+  </main>
+</body>
 </html>

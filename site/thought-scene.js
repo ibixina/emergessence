@@ -1,0 +1,288 @@
+const clamp = (value, low = 0, high = 1) => Math.min(high, Math.max(low, value));
+function smooth(low, high, value) {
+  const t = clamp((value - low) / (high - low));
+  return t * t * (3 - 2 * t);
+}
+
+export class ThoughtScene {
+  constructor(hero) {
+    this.hero = hero;
+    this.cover = hero.querySelector('.thought-cover-page');
+    this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    this.frame = 0;
+    this.camera = null;
+    this.keyboardFocus = false;
+    this.navigationTarget = null;
+    this.refresh = this.refresh.bind(this);
+    this.resize = this.resize.bind(this);
+    this.animate = this.animate.bind(this);
+    this.stops = [{ source:hero, page:this.cover, anchor:'top', cover:true }, ...[...document.querySelectorAll('.thought-stop')].map((source, index) => {
+      const page = source.querySelector('.thought-cluster');
+      const anchor = page.querySelector('[id]')?.id || `thought-${index + 1}`;
+      if (!page.querySelector('[id]')) page.id = anchor;
+      return { source, page, anchor };
+    })];
+    this.fragments = new Map();
+    this.stops.forEach(stop => {
+      this.fragments.set(stop.anchor, stop);
+      stop.page.querySelectorAll('[id]').forEach(element => this.fragments.set(element.id, stop));
+    });
+    this.fragments.set('first-connection', this.stops[1]);
+    this.sections = [...document.querySelectorAll('.portfolio-section')];
+    this.sections.forEach(section => {
+      const stop = this.stops.find(entry => section.contains(entry.source));
+      this.fragments.set(section.id, stop);
+      stop.heading = section.querySelector('.section-heading');
+      stop.section = section;
+      stop.bridge = section.previousElementSibling?.classList.contains('thought-bridge') ? section.previousElementSibling : null;
+    });
+    this.navigation = document.querySelector('.primary-navigation');
+    this.footer = document.querySelector('.site-footer');
+    this.footerMarker = document.createComment('notebook footer');
+    this.footer.before(this.footerMarker);
+    this.thread = document.querySelector('.experiment-thread');
+    this.threadMarker = document.createComment('experiment connections');
+    this.thread.before(this.threadMarker);
+    this.lastExperiment = this.stops.filter(stop => document.getElementById('projects').contains(stop.source)).at(-1);
+    this.stops.filter(stop => !stop.cover).forEach(stop => {
+      const links = document.createElement('nav');
+      links.className = 'journey-chapters';
+      links.setAttribute('aria-label', 'Notebook chapters');
+      links.innerHTML = '<a href="#about">about</a><a href="#research">questions</a><a href="#projects">experiments</a><a href="#contact">say hello ↗</a>';
+      stop.page.append(links);
+    });
+    this.stage = document.createElement('div');
+    this.stage.className = 'thought-stage';
+    this.stage.innerHTML = '<canvas class="thought-route" aria-hidden="true"></canvas><div class="thought-perspective"><div class="thought-world"></div></div>';
+    document.getElementById('portfolio').append(this.stage);
+    this.world = this.stage.querySelector('.thought-world');
+    this.perspective = this.stage.querySelector('.thought-perspective');
+    this.canvas = this.stage.querySelector('canvas');
+    this.context = this.canvas.getContext('2d');
+    window.addEventListener('scroll', this.refresh, { passive:true });
+    window.addEventListener('resize', this.resize, { passive:true });
+    window.addEventListener('hashchange', () => this.navigate(location.hash));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Tab') this.keyboardFocus = true;
+    });
+    document.addEventListener('pointerdown', () => { this.keyboardFocus = false; }, { passive:true });
+    document.addEventListener('click', event => {
+      const link = event.target.closest('a[href^="#"]');
+      if (!link || event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (!this.fragments.has(link.hash.slice(1))) return;
+      event.preventDefault();
+      history.pushState(null, '', link.hash);
+      this.navigate(link.hash, 'smooth');
+    });
+    document.addEventListener('focusin', event => {
+      if (!this.enabled || !this.keyboardFocus) return;
+      const stop = this.stops.find(entry => entry.page.contains(event.target));
+      if (!stop) return;
+      if (Math.abs(stop.z - this.camera - this.focal) > this.focal * .25) this.navigate(`#${stop.anchor}`);
+      requestAnimationFrame(() => {
+        if (!this.enabled || document.activeElement !== event.target || this.active !== stop || (this.navigationTarget && this.navigationTarget !== stop)) return;
+        const bounds = event.target.getBoundingClientRect();
+        const padding = this.stage.getBoundingClientRect().top + 25;
+        const shift = bounds.bottom > innerHeight - 25 ? bounds.bottom - innerHeight + 25 : bounds.top < padding ? bounds.top - padding : 0;
+        if (!shift || !stop.overflow) return;
+        const pan = clamp(scrollY - stop.start - stop.entrance + shift, 0, stop.overflow);
+        window.scrollTo({ top:stop.start + stop.entrance + pan, behavior:'instant' });
+      });
+    });
+    document.querySelectorAll('details').forEach(entry => entry.addEventListener('toggle', this.resize));
+    this.reducedMotion.addEventListener('change', () => { this.mount(); this.resize(); });
+    this.observer = new ResizeObserver(this.resize);
+    this.stops.forEach(stop => this.observer.observe(stop.page));
+    this.mount();
+    this.resize();
+  }
+
+  mount() {
+    this.enabled = !this.reducedMotion.matches;
+    document.documentElement.classList.toggle('thought-journey', this.enabled);
+    this.stage.hidden = !this.enabled;
+    this.navigation.hidden = this.enabled;
+    for (const stop of this.stops) {
+      if (this.enabled) {
+        this.world.append(stop.page);
+        stop.page.classList.add('thought-plane');
+        if (stop.cover) stop.page.classList.add('thought-plane-cover');
+        if (stop.heading) stop.page.prepend(stop.heading);
+        if (stop.bridge) { stop.bridge.hidden = true; }
+      } else {
+        if (stop.cover) this.hero.querySelector('.thought-cover').append(stop.page);
+        else stop.source.append(stop.page);
+        stop.page.classList.remove('thought-plane');
+        stop.page.removeAttribute('style');
+        stop.page.inert = false;
+        stop.source.style.height = '';
+        if (stop.heading) stop.section.prepend(stop.heading);
+        if (stop.bridge) stop.bridge.hidden = false;
+      }
+    }
+    if (this.enabled) {
+      this.stops.at(-1).page.append(this.footer);
+      this.lastExperiment.page.append(this.thread);
+    } else {
+      this.footerMarker.after(this.footer);
+      this.threadMarker.after(this.thread);
+    }
+  }
+
+  resize() {
+    if (!this.enabled) return;
+    const old = this.active;
+    const previousWidth = this.width;
+    const progress = old ? clamp((scrollY - old.start) / old.duration) : 0;
+    const bounds = this.stage.getBoundingClientRect();
+    this.width = bounds.width;
+    this.height = bounds.height;
+    this.focal = Math.max(460, Math.min(this.width * 1.1, this.height * 1.3));
+    this.perspective.style.perspective = `${this.focal}px`;
+    const dpr = Math.min(devicePixelRatio || 1, 1.75);
+    const width = Math.round(this.width * dpr), height = Math.round(this.height * dpr);
+    if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.context?.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    this.stops.forEach((stop, index) => {
+      stop.page.style.width = `${stop.cover ? this.width : Math.min(1120, this.width - Math.min(100, this.width * .12))}px`;
+      if (stop.cover) stop.page.style.height = `${this.height}px`;
+      stop.height = stop.page.offsetHeight;
+      stop.z = index * this.focal * 2.8;
+      stop.overflow = stop.cover ? 0 : Math.max(0, stop.height - this.height + 105);
+      stop.entrance = stop.cover ? 0 : this.height * .68;
+      stop.reading = stop.cover ? 0 : stop.overflow + this.height * .28;
+      stop.departure = index === this.stops.length - 1 ? 0 : this.height * .72;
+      stop.duration = stop.entrance + stop.reading + stop.departure;
+      stop.top = stop.cover ? 0 : Math.max(45, (this.height - stop.height) / 2);
+      stop.source.style.height = `${stop.duration}px`;
+    });
+    const last = this.stops.at(-1);
+    last.source.style.height = `${last.entrance + last.reading + innerHeight - this.height * .28}px`;
+    this.stops.forEach(stop => { stop.start = stop.cover ? 0 : stop.source.getBoundingClientRect().top + scrollY; });
+    const transform = this.world.style.transform;
+    this.world.style.transform = 'translateZ(0px)';
+    this.stops.forEach(stop => {
+      const drawing = stop.page.querySelector(stop.cover ? '.thought-cover-neurons .study-sketch' : '.working-study .study-sketch, .method-brain .study-sketch');
+      const page = stop.page.getBoundingClientRect();
+      const figure = drawing?.getBoundingClientRect();
+      const scale = page.width / stop.page.offsetWidth;
+      stop.node = figure && scale > 0 ? [
+        (figure.left + figure.width / 2 - page.left) / scale - stop.page.offsetWidth / 2,
+        (figure.top + figure.height / 2 - page.top) / scale + stop.top - this.height * .44,
+        stop.z
+      ] : [0, 0, stop.z];
+    });
+    this.world.style.transform = transform;
+    this.routes = this.stops.slice(0, -1).map((stop, index) => {
+      const next = this.stops[index + 1];
+      const points = [];
+      for (let step = 0; step <= 70; step++) {
+        const t = step / 70;
+        const eased = t * t * (3 - 2 * t);
+        points.push([
+          stop.node[0] + (next.node[0] - stop.node[0]) * eased + Math.sin(t * Math.PI) * this.width * .25 * (index % 2 ? -1 : 1),
+          stop.node[1] + (next.node[1] - stop.node[1]) * eased + Math.sin(t * Math.PI * 2) * this.height * .18,
+          stop.z + (next.z - stop.z) * t
+        ]);
+      }
+      return points;
+    });
+    if (old && previousWidth !== this.width) window.scrollTo({ top:old.start + old.duration * progress, behavior:'instant' });
+    this.camera = null;
+    this.refresh();
+  }
+
+  navigate(hash, behavior = 'instant') {
+    const stop = this.fragments.get(hash.replace(/^#/, ''));
+    if (!stop) return;
+    if (!this.enabled) {
+      document.getElementById(hash.replace(/^#/, ''))?.scrollIntoView({ behavior });
+      return;
+    }
+    this.resize();
+    this.navigationTarget = stop;
+    const offset = stop.start + stop.entrance - (stop.cover ? stop.start : 0);
+    window.scrollTo({ top:Math.max(0, offset), behavior });
+    if (behavior === 'instant') this.camera = null;
+    this.refresh();
+  }
+
+  refresh() {
+    if (!this.enabled) return;
+    const offset = scrollY;
+    let index = 0;
+    while (index < this.stops.length - 1 && offset >= this.stops[index + 1].start) index++;
+    const stop = this.stops[index];
+    this.active = stop;
+    const local = Math.max(0, offset - stop.start);
+    if (this.navigationTarget === stop && local >= stop.entrance - 1) this.navigationTarget = null;
+    const read = stop.z - this.focal;
+    if (local < stop.entrance) this.target = stop.z - this.focal * 2.4 + this.focal * 1.4 * clamp(local / stop.entrance);
+    else if (local < stop.entrance + stop.reading || !stop.departure) this.target = read;
+    else this.target = read + this.focal * 1.4 * clamp((local - stop.entrance - stop.reading) / stop.departure);
+    this.camera ??= this.target;
+    if (!this.frame) this.frame = requestAnimationFrame(this.animate);
+  }
+
+  animate(time) {
+    this.frame = 0;
+    if (!this.enabled) return;
+    const elapsed = this.lastTime ? Math.min(50, time - this.lastTime) : 16;
+    this.lastTime = time;
+    this.camera += (this.target - this.camera) * (1 - Math.exp(-elapsed / 90));
+    this.world.style.transform = `translateZ(${this.focal + this.camera}px)`;
+    this.stage.dataset.cameraDepth = Math.round(this.camera);
+    this.stage.dataset.cameraX = '0';
+    this.stage.dataset.cameraY = '0';
+    this.stage.dataset.cameraYaw = '0';
+    this.stage.dataset.renderer = 'perspective-notebook';
+    for (const stop of this.stops) {
+      const depth = stop.z - this.camera;
+      const opacity = smooth(this.focal * .3, this.focal * .72, depth) * (1 - smooth(this.focal * 1.7, this.focal * 3.6, depth));
+      const pan = clamp((scrollY - stop.start - stop.entrance) / Math.max(1, stop.overflow)) * stop.overflow;
+      const y = stop.top + stop.height / 2 - this.height * .44 - pan;
+      stop.page.style.transform = `translate3d(${-stop.page.offsetWidth / 2}px,${stop.cover ? -this.height / 2 + this.height * .06 : y - stop.height / 2}px,${-stop.z}px)`;
+      stop.page.style.opacity = opacity.toFixed(3);
+      stop.page.style.visibility = opacity < .015 ? 'hidden' : 'visible';
+      if (opacity >= .015 && !stop.visible) stop.page.querySelectorAll('.notebook-connections').forEach(svg => svg.parentElement.dispatchEvent(new Event('notebook-layout')));
+      stop.visible = opacity >= .015;
+      stop.page.inert = opacity < .25;
+      stop.page.dataset.depth = Math.round(depth);
+    }
+    this.drawRoutes();
+    if (Math.abs(this.target - this.camera) > .1) this.frame = requestAnimationFrame(this.animate);
+    else this.lastTime = 0;
+  }
+
+  drawRoutes() {
+    if (!this.context) return;
+    const ctx = this.context;
+    ctx.clearRect(0, 0, this.width, this.height);
+    const readDistance = Math.abs(this.active.z - this.focal - this.camera) / this.focal;
+    const traveling = smooth(.05, .5, readDistance);
+    if (traveling < .01) return;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#735986';
+    for (const route of this.routes) {
+      let previous = null;
+      for (const [x,y,z] of route) {
+        const depth = z - this.camera;
+        if (depth < 100 || depth > this.focal * 5) { previous = null; continue; }
+        const point = [this.width / 2 + x * this.focal / depth, this.height * .44 + y * this.focal / depth];
+        if (previous) {
+          ctx.globalAlpha = traveling * .42 * smooth(100, 400, depth) * (1 - smooth(this.focal * 2, this.focal * 5, depth));
+          ctx.lineWidth = clamp(this.focal / depth, .45, 1.1);
+          ctx.beginPath();
+          ctx.moveTo(...previous);
+          ctx.lineTo(...point);
+          ctx.stroke();
+        }
+        previous = point;
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+}
