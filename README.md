@@ -14,6 +14,8 @@ Open `http://127.0.0.1:5173/`. No build step or package installation is required
 
 The main site has one design and no comparison toolbar. Old `/designs/` links redirect to the main site and preserve their section anchors. Historical prototypes, artwork provenance, and screenshots remain in `designs/`; the former comparison page is archived at `designs/archive/comparison.html`.
 
-Chapter links, research disclosures, keyboard focus, mobile scrolling, and direct section links remain functional. Reduced motion restores a normal scrolling notebook layout. Artwork and font provenance are documented in `designs/art-direction.md` and `site/assets/fonts/README.md`.
+Scrolling pauses settle each spread into its reading position. Taller spreads scroll freely through their contents, and the page counter provides previous/next controls. Chapter links, research disclosures, keyboard focus, mobile scrolling, and direct section links remain functional. Reduced motion restores a normal scrolling notebook layout. Artwork and font provenance are documented in `designs/art-direction.md` and `site/assets/fonts/README.md`.
+
+Run `node --test tools/scroll-settling.test.mjs` to check page settling and tall-page reading boundaries.
 
 Open `http://127.0.0.1:5173/?benchmark` to run the opt-in performance benchmark. It performs three complete scroll journeys and a chapter/disclosure scenario, then displays the measured results. Profiling code only loads with this query parameter. See `tools/performance.md` for recorded comparisons and measurement limits.

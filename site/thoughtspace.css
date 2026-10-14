@@ -135,6 +135,11 @@
 .thought-route, .thought-perspective, .thought-world { position:absolute; inset:0; width:100%; height:100%; }
 .thought-perspective { perspective-origin:50% 44%; }
 .thought-world { transform-style:preserve-3d; }
+.journey-pager { position:absolute; right:24px; bottom:max(16px,env(safe-area-inset-bottom)); display:flex; align-items:center; gap:8px; padding:3px 6px; border:1px solid #73598624; border-radius:6px; background:var(--paper); color:var(--accent); pointer-events:auto; font:400 22px/1 var(--hand); }
+.journey-pager button { display:grid; place-items:center; width:44px; height:44px; padding:0; border:0; background:none; color:inherit; font:inherit; font-size:28px; cursor:pointer; }
+.journey-pager button:disabled { opacity:.25; cursor:default; }
+.journey-pager button:hover:enabled { background:#7359860c; border-radius:3px; }
+.journey-page { min-width:68px; text-align:center; }
 [data-design="thoughtspace"] .thought-plane { position:absolute; left:50%; top:44%; margin:0; pointer-events:auto; transform-style:preserve-3d; }
 [data-design="thoughtspace"] .thought-plane>.section-heading { grid-column:1/-1; margin:0 0 28px; }
 [data-design="thoughtspace"] .thought-plane .site-footer { margin-top:35px; padding-left:0; padding-right:0; }
@@ -142,6 +147,9 @@
 @media(max-height:760px) and (min-width:701px) {
   [data-design="thoughtspace"] .thought-opening h2 { font-size:68px; }
   [data-design="thoughtspace"] .thought-cover-neurons .study-sketch { height:120px; }
+}
+@media(max-width:700px) {
+  .journey-pager { right:16px; bottom:max(12px,env(safe-area-inset-bottom)); }
 }
 [data-design="thoughtspace"] .journey-chapters { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px 22px; grid-column:1/-1; margin-top:35px; font-size:24px; color:var(--accent); }
 [data-design="thoughtspace"] .journey-chapters a { display:inline-flex; align-items:center; min-height:44px; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:5px; }

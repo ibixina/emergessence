@@ -4,6 +4,22 @@ function smooth(low, high, value) {
   return t * t * (3 - 2 * t);
 }
 
+export function settledScrollPosition(stops, offset, direction, threshold) {
+  let previousEnd = 0;
+  for (const stop of stops) {
+    const start = stop.start + stop.entrance;
+    const end = start + stop.overflow;
+    if (offset < start) {
+      if (direction > 0) return offset - previousEnd >= threshold ? start : previousEnd;
+      if (direction < 0) return start - offset >= threshold ? previousEnd : start;
+      return offset - previousEnd < start - offset ? previousEnd : start;
+    }
+    if (offset <= end) return offset;
+    previousEnd = end;
+  }
+  return previousEnd;
+}
+
 export class ThoughtScene {
   constructor(hero) {
     this.hero = hero;
@@ -14,6 +30,13 @@ export class ThoughtScene {
     this.camera = null;
     this.keyboardFocus = false;
     this.navigationTarget = null;
+    this.snapTimer = 0;
+    this.snapTarget = null;
+    this.pointerDown = false;
+    this.touching = false;
+    this.lastScroll = scrollY;
+    this.scrollDirection = 0;
+    this.onScroll = this.onScroll.bind(this);
     this.refresh = this.refresh.bind(this);
     this.resize = this.resize.bind(this);
     this.scheduleResize = this.scheduleResize.bind(this);
@@ -59,20 +82,39 @@ export class ThoughtScene {
     });
     this.stage = document.createElement('div');
     this.stage.className = 'thought-stage';
-    this.stage.innerHTML = '<canvas class="thought-route" aria-hidden="true"></canvas><div class="thought-perspective"><div class="thought-world"></div></div>';
+    this.stage.innerHTML = '<canvas class="thought-route" aria-hidden="true"></canvas><div class="thought-perspective"><div class="thought-world"></div></div><nav class="journey-pager" aria-label="Notebook pages" hidden><button type="button" class="journey-previous" aria-label="Previous page">←</button><span class="journey-page" role="status" aria-atomic="true"></span><button type="button" class="journey-next" aria-label="Next page">→</button></nav>';
     document.getElementById('portfolio').append(this.stage);
     this.world = this.stage.querySelector('.thought-world');
     this.perspective = this.stage.querySelector('.thought-perspective');
     this.canvas = this.stage.querySelector('canvas');
     this.context = this.canvas.getContext('2d');
+    this.pager = this.stage.querySelector('.journey-pager');
+    this.pageNumber = this.pager.querySelector('.journey-page');
+    this.previousPage = this.pager.querySelector('.journey-previous');
+    this.nextPage = this.pager.querySelector('.journey-next');
+    this.previousPage.addEventListener('click', () => this.turnPage(-1));
+    this.nextPage.addEventListener('click', () => this.turnPage(1));
     Object.assign(this.stage.dataset, { cameraX:'0', cameraY:'0', cameraYaw:'0', renderer:'perspective-notebook' });
-    window.addEventListener('scroll', this.refresh, { passive:true });
+    window.addEventListener('scroll', this.onScroll, { passive:true });
+    window.addEventListener('wheel', event => { if (event.deltaY) this.cancelSnap(); }, { passive:true });
     window.addEventListener('resize', this.scheduleResize, { passive:true });
     window.addEventListener('hashchange', () => this.navigate(location.hash));
     document.addEventListener('keydown', event => {
       if (event.key === 'Tab') this.keyboardFocus = true;
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) this.cancelSnap();
     });
-    document.addEventListener('pointerdown', () => { this.keyboardFocus = false; }, { passive:true });
+    document.addEventListener('pointerdown', () => {
+      this.keyboardFocus = false;
+      this.pointerDown = true;
+      this.cancelSnap();
+    }, { passive:true });
+    const releasePointer = () => { this.pointerDown = false; this.scheduleSnap(); };
+    document.addEventListener('pointerup', releasePointer, { passive:true });
+    document.addEventListener('pointercancel', releasePointer, { passive:true });
+    document.addEventListener('touchstart', () => { this.touching = true; this.cancelSnap(); }, { passive:true });
+    const releaseTouch = event => { this.touching = event.touches.length > 0; this.scheduleSnap(); };
+    document.addEventListener('touchend', releaseTouch, { passive:true });
+    document.addEventListener('touchcancel', releaseTouch, { passive:true });
     document.addEventListener('click', event => {
       const link = event.target.closest('a[href^="#"]');
       if (!link || event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -100,6 +142,9 @@ export class ThoughtScene {
     this.reducedMotion.addEventListener('change', () => { this.mount(); this.resize(); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
+        this.pointerDown = false;
+        this.touching = false;
+        this.cancelSnap();
         cancelAnimationFrame(this.frame);
         this.frame = 0;
         this.lastTime = 0;
@@ -118,6 +163,7 @@ export class ThoughtScene {
   }
 
   mount() {
+    this.cancelSnap();
     this.enabled = !this.reducedMotion.matches;
     document.documentElement.classList.toggle('thought-journey', this.enabled);
     this.stage.hidden = !this.enabled;
@@ -161,9 +207,12 @@ export class ThoughtScene {
     cancelAnimationFrame(this.resizeFrame);
     this.resizeFrame = 0;
     if (!this.enabled) return;
+    this.cancelSnap();
     const old = this.active;
     const previousWidth = this.width;
     const progress = old ? clamp((scrollY - old.start) / old.duration) : 0;
+    const reading = old && scrollY >= old.start + old.entrance && scrollY <= old.start + old.entrance + old.reading;
+    const pan = old ? clamp(scrollY - old.start - old.entrance, 0, old.overflow) : 0;
     const bounds = this.stage.getBoundingClientRect();
     this.width = bounds.width;
     this.height = bounds.height;
@@ -185,12 +234,12 @@ export class ThoughtScene {
       stop.width = stop.page.offsetWidth;
       stop.height = stop.page.offsetHeight;
       stop.z = index * this.focal * 2.8;
-      stop.overflow = stop.cover ? 0 : Math.max(0, stop.height - this.height + 105);
+      stop.top = stop.cover ? 0 : Math.max(45, (this.height - stop.height) / 2);
+      stop.overflow = stop.cover ? 0 : Math.max(0, stop.top + stop.height - this.height + 90);
       stop.entrance = stop.cover ? 0 : this.height * .68;
       stop.reading = stop.cover ? 0 : stop.overflow + this.height * .28;
       stop.departure = index === this.stops.length - 1 ? 0 : this.height * .72;
       stop.duration = stop.entrance + stop.reading + stop.departure;
-      stop.top = stop.cover ? 0 : Math.max(45, (this.height - stop.height) / 2);
       stop.transform = null;
     });
     this.stops.forEach(stop => {
@@ -228,7 +277,10 @@ export class ThoughtScene {
       }
       return points;
     });
-    if (old && previousWidth !== this.width) window.scrollTo({ top:old.start + old.duration * progress, behavior:'instant' });
+    if (old && (reading || previousWidth !== this.width)) {
+      const top = reading ? old.start + old.entrance + Math.min(pan, old.overflow) : old.start + old.duration * progress;
+      window.scrollTo({ top, behavior:'instant' });
+    }
     this.camera = null;
     this.refresh();
   }
@@ -236,6 +288,7 @@ export class ThoughtScene {
   navigate(hash, behavior = 'instant') {
     const stop = this.fragments.get(hash.replace(/^#/, ''));
     if (!stop) return;
+    this.cancelSnap();
     if (!this.enabled) {
       document.getElementById(hash.replace(/^#/, ''))?.scrollIntoView({ behavior });
       return;
@@ -246,6 +299,46 @@ export class ThoughtScene {
     window.scrollTo({ top:Math.max(0, offset), behavior });
     if (behavior === 'instant') this.camera = null;
     this.refresh();
+  }
+
+  turnPage(direction) {
+    const index = clamp((this.currentIndex ?? 0) + direction, 0, this.stops.length - 1);
+    this.navigate(`#${this.stops[index].anchor}`, 'smooth');
+  }
+
+  cancelSnap() {
+    clearTimeout(this.snapTimer);
+    this.snapTimer = 0;
+    if (this.snapTarget !== null || this.navigationTarget) {
+      this.snapTarget = null;
+      this.navigationTarget = null;
+      window.scrollTo({ top:scrollY, behavior:'instant' });
+    }
+  }
+
+  onScroll() {
+    const movement = scrollY - this.lastScroll;
+    if (movement && this.snapTarget === null) this.scrollDirection = Math.sign(movement);
+    this.lastScroll = scrollY;
+    this.refresh();
+    this.scheduleSnap();
+  }
+
+  scheduleSnap() {
+    clearTimeout(this.snapTimer);
+    if (!this.enabled || this.pointerDown || this.touching || document.hidden) return;
+    this.snapTimer = setTimeout(() => this.settle(), 160);
+  }
+
+  settle() {
+    this.snapTimer = 0;
+    this.snapTarget = null;
+    if (!this.enabled || this.pointerDown || this.touching || document.hidden || this.navigationTarget) return;
+    if (this.resizeFrame) this.resize();
+    const top = settledScrollPosition(this.stops, scrollY, this.scrollDirection, clamp(this.height * .08, 40, 80));
+    if (Math.abs(top - scrollY) < 1) return;
+    this.snapTarget = top;
+    window.scrollTo({ top, behavior:'smooth' });
   }
 
   refresh() {
@@ -273,6 +366,15 @@ export class ThoughtScene {
     this.camera += (this.target - this.camera) * (1 - Math.exp(-elapsed / 90));
     this.world.style.transform = `translateZ(${this.focal + this.camera}px)`;
     this.stage.dataset.cameraDepth = Math.round(this.camera);
+    const index = clamp(Math.round((this.camera + this.focal) / (this.focal * 2.8)), 0, this.stops.length - 1);
+    if (index !== this.currentIndex) {
+      this.currentIndex = index;
+      this.pager.hidden = index === 0;
+      this.pageNumber.textContent = `${String(index + 1).padStart(2, '0')} / ${String(this.stops.length).padStart(2, '0')}`;
+      this.pageNumber.setAttribute('aria-label', `Page ${index + 1} of ${this.stops.length}`);
+      this.previousPage.disabled = index === 0;
+      this.nextPage.disabled = index === this.stops.length - 1;
+    }
     for (const stop of this.stops) {
       const depth = stop.z - this.camera;
       const opacity = smooth(this.focal * .3, this.focal * .72, depth) * (1 - smooth(this.focal * 1.7, this.focal * 3.6, depth));
