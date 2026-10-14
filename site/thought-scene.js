@@ -1,37 +1,9 @@
+import { ScrollGesture, ScrollMotion, scrollGestureBounds, settledScrollPosition } from './scroll-motion.js?v=1';
+
 const clamp = (value, low = 0, high = 1) => Math.min(high, Math.max(low, value));
 function smooth(low, high, value) {
   const t = clamp((value - low) / (high - low));
   return t * t * (3 - 2 * t);
-}
-
-export function settledScrollPosition(stops, offset, direction, threshold) {
-  let previousEnd = 0;
-  for (const stop of stops) {
-    const start = stop.start + stop.entrance;
-    const end = start + stop.overflow;
-    if (offset < start) {
-      if (direction > 0) return offset - previousEnd >= threshold ? start : previousEnd;
-      if (direction < 0) return start - offset >= threshold ? previousEnd : start;
-      return offset - previousEnd < start - offset ? previousEnd : start;
-    }
-    if (offset <= end) return offset;
-    previousEnd = end;
-  }
-  return previousEnd;
-}
-
-export function scrollGestureBounds(stops, offset) {
-  const position = settledScrollPosition(stops, offset, 0, 0);
-  const index = stops.findIndex(stop => position >= stop.start + stop.entrance && position <= stop.start + stop.entrance + stop.overflow);
-  const stop = stops[index];
-  const start = stop.start + stop.entrance;
-  const end = start + stop.overflow;
-  const previous = stops[index - 1];
-  const next = stops[index + 1];
-  return {
-    min:offset <= start + 1 && previous ? previous.start + previous.entrance + previous.overflow : start,
-    max:offset >= end - 1 && next ? next.start + next.entrance : end
-  };
 }
 
 export class ThoughtScene {
@@ -44,11 +16,12 @@ export class ThoughtScene {
     this.camera = null;
     this.keyboardFocus = false;
     this.navigationTarget = null;
+    this.motion = new ScrollMotion(scrollY);
+    this.writtenScroll = null;
     this.snapTimer = 0;
-    this.snapTarget = null;
     this.scrollBounds = null;
     this.wheelTimer = 0;
-    this.wheelDirection = 0;
+    this.wheelGesture = null;
     this.pointerDown = false;
     this.touching = false;
     this.lastScroll = scrollY;
@@ -232,9 +205,10 @@ export class ThoughtScene {
     this.cancelSnap();
     const old = this.active;
     const previousWidth = this.width;
-    const progress = old ? clamp((scrollY - old.start) / old.duration) : 0;
-    const reading = old && scrollY >= old.start + old.entrance && scrollY <= old.start + old.entrance + old.reading;
-    const pan = old ? clamp(scrollY - old.start - old.entrance, 0, old.overflow) : 0;
+    const offset = this.motion.position;
+    const progress = old ? clamp((offset - old.start) / old.duration) : 0;
+    const reading = old && offset >= old.start + old.entrance && offset <= old.start + old.entrance + old.reading;
+    const pan = old ? clamp(offset - old.start - old.entrance, 0, old.overflow) : 0;
     const bounds = this.stage.getBoundingClientRect();
     this.width = bounds.width;
     this.height = bounds.height;
@@ -301,7 +275,8 @@ export class ThoughtScene {
     });
     if (old && (reading || previousWidth !== this.width)) {
       const top = reading ? old.start + old.entrance + Math.min(pan, old.overflow) : old.start + old.duration * progress;
-      window.scrollTo({ top, behavior:'instant' });
+      this.motion.reset(top);
+      this.writeScroll();
     }
     this.camera = null;
     this.refresh();
@@ -318,8 +293,10 @@ export class ThoughtScene {
     if (this.resizeFrame) this.resize();
     this.navigationTarget = stop;
     const offset = stop.start + stop.entrance - (stop.cover ? stop.start : 0);
-    window.scrollTo({ top:Math.max(0, offset), behavior });
-    if (behavior === 'instant') this.camera = null;
+    if (behavior === 'instant') {
+      this.motion.reset(Math.max(0, offset));
+      this.writeScroll();
+    } else this.motion.target = Math.max(0, offset);
     this.refresh();
   }
 
@@ -328,85 +305,87 @@ export class ThoughtScene {
     this.navigate(`#${this.stops[index].anchor}`, 'smooth');
   }
 
-  cancelSnap(resetGesture = true) {
+  cancelSnap() {
     clearTimeout(this.snapTimer);
     this.snapTimer = 0;
-    if (resetGesture) {
-      clearTimeout(this.wheelTimer);
-      this.wheelTimer = 0;
-      this.wheelDirection = 0;
-      this.scrollBounds = null;
-    }
-    if (this.snapTarget !== null || this.navigationTarget) {
-      this.snapTarget = null;
-      this.navigationTarget = null;
-      window.scrollTo({ top:scrollY, behavior:'instant' });
-    }
+    clearTimeout(this.wheelTimer);
+    this.wheelTimer = 0;
+    this.wheelGesture = null;
+    this.scrollBounds = null;
+    this.navigationTarget = null;
+    this.motion.reset(this.motion.position);
   }
 
   onWheel(event) {
     if (!this.enabled || event.defaultPrevented || event.ctrlKey || !event.deltaY) return;
     event.preventDefault();
-    const direction = Math.sign(event.deltaY);
-    if (!this.wheelDirection) {
-      this.cancelSnap();
-      this.scrollBounds = scrollGestureBounds(this.stops, scrollY);
-    } else if (direction !== this.wheelDirection) this.cancelSnap(false);
-    this.wheelDirection = direction;
+    clearTimeout(this.snapTimer);
+    this.snapTimer = 0;
+    this.navigationTarget = null;
+    this.scrollBounds = null;
+    this.wheelGesture ??= new ScrollGesture(this.stops, this.motion.position);
     clearTimeout(this.wheelTimer);
     this.wheelTimer = setTimeout(() => {
       this.wheelTimer = 0;
-      this.wheelDirection = 0;
-      this.scrollBounds = null;
-      if (this.snapTarget !== null) this.scheduleSnap();
-      else this.settle();
+      this.wheelGesture = null;
     }, 240);
-    // Momentum continues the existing turn instead of stopping its animation.
-    if (this.snapTarget !== null) return;
-    this.scrollDirection = direction;
     const unit = event.deltaMode === 1 ? 32 : event.deltaMode === 2 ? this.height : 1;
-    const offset = clamp(scrollY + event.deltaY * unit, this.scrollBounds.min, this.scrollBounds.max);
-    const top = settledScrollPosition(this.stops, offset, direction, clamp(this.height * .08, 40, 80));
-    const atEdge = offset === this.scrollBounds.min || offset === this.scrollBounds.max;
-    if (direction * (top - scrollY) > 0 && (Math.abs(top - offset) >= 1 || atEdge)) {
-      this.snapTarget = top;
-      window.scrollTo({ top, behavior:'smooth' });
-    } else window.scrollTo({ top:offset, behavior:'instant' });
+    this.motion.target = this.wheelGesture.move(event.deltaY * unit, this.motion.position);
+    this.scrollDirection = this.wheelGesture.direction;
+    this.refresh();
   }
 
   onScroll() {
+    if (scrollY === this.writtenScroll) return;
+    this.writtenScroll = null;
+    clearTimeout(this.wheelTimer);
+    this.wheelTimer = 0;
+    this.wheelGesture = null;
+    this.navigationTarget = null;
+    let offset = scrollY;
     if (this.scrollBounds) {
-      const top = clamp(scrollY, this.scrollBounds.min, this.scrollBounds.max);
-      if (Math.abs(top - scrollY) >= 1) window.scrollTo({ top, behavior:'instant' });
+      offset = clamp(offset, this.scrollBounds.min, this.scrollBounds.max);
     }
-    const movement = scrollY - this.lastScroll;
-    if (movement && this.snapTarget === null) this.scrollDirection = Math.sign(movement);
-    this.lastScroll = scrollY;
+    const movement = offset - this.lastScroll;
+    if (movement) this.scrollDirection = Math.sign(movement);
+    this.lastScroll = offset;
+    this.motion.reset(offset);
+    if (offset !== scrollY) this.writeScroll();
     this.refresh();
     this.scheduleSnap();
   }
 
+  writeScroll() {
+    // Only the document is rounded; the controller and rendered view retain fractions.
+    if (Math.abs(this.motion.position - scrollY) < .5) return;
+    window.scrollTo({ top:this.motion.position, behavior:'instant' });
+    this.writtenScroll = scrollY;
+    this.lastScroll = this.motion.position;
+  }
+
   scheduleSnap() {
     clearTimeout(this.snapTimer);
-    if (!this.enabled || this.pointerDown || this.touching || this.wheelDirection || document.hidden) return;
+    if (!this.enabled || this.pointerDown || this.touching || this.wheelGesture || document.hidden || this.motion.moving) return;
     this.snapTimer = setTimeout(() => this.settle(), this.scrollBounds ? 240 : 160);
   }
 
   settle() {
     this.snapTimer = 0;
-    this.snapTarget = null;
     this.scrollBounds = null;
     if (!this.enabled || this.pointerDown || this.touching || document.hidden || this.navigationTarget) return;
     if (this.resizeFrame) this.resize();
-    const top = settledScrollPosition(this.stops, scrollY, this.scrollDirection, clamp(this.height * .08, 40, 80));
-    if (Math.abs(top - scrollY) < 1) return;
-    this.snapTarget = top;
-    window.scrollTo({ top, behavior:'smooth' });
+    this.motion.target = settledScrollPosition(this.stops, this.motion.position, this.scrollDirection);
+    this.refresh();
   }
 
   refresh() {
     if (!this.enabled || document.hidden) return;
-    const offset = scrollY;
+    this.updateView();
+    if (!this.frame) this.frame = requestAnimationFrame(this.animate);
+  }
+
+  updateView() {
+    const offset = this.motion.position;
     let index = 0;
     while (index < this.stops.length - 1 && offset >= this.stops[index + 1].start) index++;
     const stop = this.stops[index];
@@ -414,11 +393,9 @@ export class ThoughtScene {
     const local = Math.max(0, offset - stop.start);
     if (this.navigationTarget === stop && local >= stop.entrance - 1) this.navigationTarget = null;
     const read = stop.z - this.focal;
-    if (local < stop.entrance) this.target = stop.z - this.focal * 2.4 + this.focal * 1.4 * clamp(local / stop.entrance);
-    else if (local < stop.entrance + stop.reading || !stop.departure) this.target = read;
-    else this.target = read + this.focal * 1.4 * clamp((local - stop.entrance - stop.reading) / stop.departure);
-    this.camera ??= this.target;
-    if (!this.frame) this.frame = requestAnimationFrame(this.animate);
+    if (local < stop.entrance) this.camera = stop.z - this.focal * 2.4 + this.focal * 1.4 * clamp(local / stop.entrance);
+    else if (local < stop.entrance + stop.reading || !stop.departure) this.camera = read;
+    else this.camera = read + this.focal * 1.4 * clamp((local - stop.entrance - stop.reading) / stop.departure);
   }
 
   animate(time) {
@@ -426,7 +403,9 @@ export class ThoughtScene {
     if (!this.enabled || document.hidden) return;
     const elapsed = this.lastTime ? Math.min(50, time - this.lastTime) : 16;
     this.lastTime = time;
-    this.camera += (this.target - this.camera) * (1 - Math.exp(-elapsed / 90));
+    this.motion.step(elapsed / 1000);
+    this.writeScroll();
+    this.updateView();
     this.world.style.transform = `translateZ(${this.focal + this.camera}px)`;
     this.stage.dataset.cameraDepth = Math.round(this.camera);
     const index = clamp(Math.round((this.camera + this.focal) / (this.focal * 2.8)), 0, this.stops.length - 1);
@@ -447,7 +426,7 @@ export class ThoughtScene {
       const inert = opacity < .25;
       if (inert !== stop.page.inert) stop.page.inert = inert;
       if (!visible) continue;
-      const pan = clamp(scrollY - stop.start - stop.entrance, 0, stop.overflow);
+      const pan = clamp(this.motion.position - stop.start - stop.entrance, 0, stop.overflow);
       const y = stop.cover ? -this.height * .44 : stop.top - this.height * .44 - pan;
       const transform = `translate3d(${-stop.width / 2}px,${y}px,${-stop.z}px)`;
       if (transform !== stop.transform) stop.page.style.transform = stop.transform = transform;
@@ -456,7 +435,7 @@ export class ThoughtScene {
       stop.page.dataset.depth = Math.round(depth);
     }
     this.drawRoutes();
-    if (Math.abs(this.target - this.camera) > .1) this.frame = requestAnimationFrame(this.animate);
+    if (this.motion.moving) this.frame = requestAnimationFrame(this.animate);
     else this.lastTime = 0;
   }
 
