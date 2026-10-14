@@ -153,7 +153,7 @@ export class ThoughtScene {
       if (entries.some(entry => {
         const stop = this.stops.find(stop => stop.page === entry.target);
         const size = entry.borderBoxSize?.[0];
-        return size && (Math.abs(size.inlineSize - stop.width) >= 1 || Math.abs(size.blockSize - stop.height) >= 1);
+        return size && (Math.abs(size.inlineSize - stop.layoutWidth) >= 1 || Math.abs(size.blockSize - stop.layoutHeight) >= 1);
       })) this.scheduleResize();
     });
     this.stops.forEach(stop => this.observer.observe(stop.page, { box:'border-box' }));
@@ -212,7 +212,7 @@ export class ThoughtScene {
     const offset = this.motion.position;
     const progress = old ? clamp((offset - old.start) / old.duration) : 0;
     const reading = old && offset >= old.start + old.entrance && offset <= old.start + old.entrance + old.reading;
-    const pan = old ? clamp(offset - old.start - old.entrance, 0, old.overflow) : 0;
+    const pan = old ? clamp(offset - old.start - old.entrance, 0, old.overflow) / old.scale : 0;
     const bounds = this.stage.getBoundingClientRect();
     this.width = bounds.width;
     this.height = bounds.height;
@@ -225,17 +225,23 @@ export class ThoughtScene {
       this.canvas.height = height;
       this.context?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    // Apply widths together so the subsequent measurements share one layout.
+    const pageWidth = this.width - Math.min(100, this.width * .12);
+    const topInset = 45, bottomInset = 90;
+    const pageHeight = this.height - topInset - bottomInset;
+    // Keep the composition's layout, then fit its text and drawings together.
     this.stops.forEach(stop => {
-      stop.page.style.width = `${stop.cover ? this.width : Math.min(1120, this.width - Math.min(100, this.width * .12))}px`;
+      stop.page.style.width = `${stop.cover ? this.width : Math.min(1120, pageWidth)}px`;
       if (stop.cover) stop.page.style.height = `${this.height}px`;
     });
     this.stops.forEach((stop, index) => {
-      stop.width = stop.page.offsetWidth;
-      stop.height = stop.page.offsetHeight;
+      stop.layoutWidth = stop.page.offsetWidth;
+      stop.layoutHeight = stop.page.offsetHeight;
+      stop.scale = stop.cover ? 1 : Math.max(1, Math.min(pageWidth / stop.layoutWidth, pageHeight / stop.layoutHeight));
+      stop.width = stop.layoutWidth * stop.scale;
+      stop.height = stop.layoutHeight * stop.scale;
       stop.z = index * this.focal * 2.8;
-      stop.top = stop.cover ? 0 : Math.max(45, (this.height - stop.height) / 2);
-      stop.overflow = stop.cover ? 0 : Math.max(0, stop.top + stop.height - this.height + 90);
+      stop.top = stop.cover ? 0 : Math.max(topInset, (this.height - stop.height + topInset - bottomInset) / 2);
+      stop.overflow = stop.cover ? 0 : Math.max(0, stop.top + stop.height - this.height + bottomInset);
       stop.entrance = stop.cover ? 0 : this.height * .68;
       stop.reading = stop.overflow;
       stop.departure = index === this.stops.length - 1 ? 0 : this.height * .72;
@@ -278,7 +284,7 @@ export class ThoughtScene {
       return points;
     });
     if (old && (reading || previousWidth !== this.width)) {
-      const top = reading ? old.start + old.entrance + Math.min(pan, old.overflow) : old.start + old.duration * progress;
+      const top = reading ? old.start + old.entrance + Math.min(pan * old.scale, old.overflow) : old.start + old.duration * progress;
       this.motion.reset(top);
       this.writeScroll();
     }
@@ -443,7 +449,7 @@ export class ThoughtScene {
       if (!visible) continue;
       const pan = clamp(this.motion.position - stop.start - stop.entrance, 0, stop.overflow);
       const y = stop.cover ? -this.height * .44 : stop.top - this.height * .44 - pan;
-      const transform = `translate3d(${-stop.width / 2}px,${y}px,${-stop.z}px)`;
+      const transform = `translate3d(${-stop.width / 2}px,${y}px,${-stop.z}px) scale(${stop.scale})`;
       if (transform !== stop.transform) stop.page.style.transform = stop.transform = transform;
       const alpha = opacity.toFixed(3);
       if (alpha !== stop.opacity) stop.page.style.opacity = stop.opacity = alpha;

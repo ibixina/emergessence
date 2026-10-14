@@ -87,6 +87,37 @@ async function trace(page) {
   });
 }
 
+test('reading spreads fill the viewport without shrinking tall content', async () => {
+  for (const viewport of [{ width:1902, height:1058 }, { width:2560, height:1440 }, { width:1440, height:900 }, { width:390, height:844 }]) {
+    const { context, page } = await open({ viewport });
+    const count = await page.evaluate(() => window.testScene.stops.length);
+    for (let index = 1; index < count; index++) {
+      await navigate(page, index);
+      const dimensions = await page.evaluate(() => {
+        const scene = window.testScene;
+        const stop = scene.active;
+        const rect = stop.page.getBoundingClientRect();
+        return {
+          width:rect.width, height:rect.height, left:rect.left, top:rect.top,
+          availableWidth:scene.width - Math.min(100, scene.width * .12), availableHeight:scene.height - 135,
+          viewportWidth:scene.width, viewportHeight:scene.height, scale:stop.scale, overflow:stop.overflow
+        };
+      });
+      assert.ok(dimensions.scale >= 1, 'reading content must never be reduced below its natural size');
+      assert.ok(dimensions.width <= dimensions.availableWidth + 1, 'the spread exceeds the available width');
+      assert.ok(Math.max(dimensions.width / dimensions.availableWidth, dimensions.height / dimensions.availableHeight) >= .999,
+        `page ${index} left unused space at ${viewport.width}×${viewport.height}: ${JSON.stringify(dimensions)}`);
+      close(dimensions.left, (dimensions.viewportWidth - dimensions.width) / 2);
+      assert.ok(dimensions.top >= 44, 'the start of the page is clipped');
+      if (!dimensions.overflow) assert.ok(dimensions.top + dimensions.height <= dimensions.viewportHeight - 89, 'the page overlaps its controls');
+      if (index === 1 && viewport.width === 1902 && process.env.READING_PREVIEW_PATH) {
+        await page.screenshot({ path:process.env.READING_PREVIEW_PATH });
+      }
+    }
+    await context.close();
+  }
+});
+
 test('small scrolls give visible feedback in both directions, then restore full reading scale', async () => {
   const { context, page } = await open({ viewport:{ width:1823, height:1033 } });
   await navigate(page, 2);
@@ -106,6 +137,30 @@ test('small scrolls give visible feedback in both directions, then restore full 
     const width = await page.evaluate(() => window.testScene.active.page.getBoundingClientRect().width);
     assert.ok(Math.abs(width - readingWidth) < .1, 'the page remained scaled down after release');
   }
+  await context.close();
+});
+
+test('resizing and research disclosures keep the active spread readable', async () => {
+  const { context, page } = await open({ viewport:{ width:1902, height:1058 } });
+  await navigate(page, 3);
+  for (const viewport of [{ width:2560, height:1440 }, { width:390, height:844 }, { width:1902, height:1058 }]) {
+    await page.setViewportSize(viewport);
+    await page.waitForTimeout(450);
+    const state = await snapshot(page);
+    assert.equal(state.index, 3, 'resizing changed pages');
+    close(state.offset, state.stops[3].start);
+  }
+  await page.locator('#memory summary').click();
+  await page.waitForTimeout(450);
+  assert.equal((await snapshot(page)).index, 3);
+  await page.locator('#memory summary').click();
+  await page.waitForTimeout(450);
+  const state = await snapshot(page);
+  assert.equal(state.index, 3);
+  close(state.offset, state.stops[3].start);
+  const steady = await page.evaluate(() => ({ transform:window.testScene.active.page.style.transform, offset:scrollY }));
+  await page.waitForTimeout(300);
+  assert.deepEqual(await page.evaluate(() => ({ transform:window.testScene.active.page.style.transform, offset:scrollY })), steady, 'layout did not come to rest');
   await context.close();
 });
 

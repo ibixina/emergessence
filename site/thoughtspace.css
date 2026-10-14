@@ -140,7 +140,7 @@
 .journey-pager button:disabled { opacity:.25; cursor:default; }
 .journey-pager button:hover:enabled { background:#7359860c; border-radius:3px; }
 .journey-page { min-width:68px; text-align:center; }
-[data-design="thoughtspace"] .thought-plane { position:absolute; left:50%; top:44%; margin:0; pointer-events:auto; transform-style:preserve-3d; }
+[data-design="thoughtspace"] .thought-plane { position:absolute; left:50%; top:44%; margin:0; pointer-events:auto; transform-style:preserve-3d; transform-origin:0 0; }
 [data-design="thoughtspace"] .thought-plane>.section-heading { grid-column:1/-1; margin:0 0 28px; }
 [data-design="thoughtspace"] .thought-plane .site-footer { margin-top:35px; padding-left:0; padding-right:0; }
 [data-design="thoughtspace"] .thought-plane-cover { min-height:660px; }
