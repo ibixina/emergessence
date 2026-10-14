@@ -1,4 +1,13 @@
-[data-design="thoughtspace"] { --paper:#faf9f5; --ink:#34312d; --accent:#735986; }
+[data-design="thoughtspace"] { --paper:#faf9f5; --ink:#34312d; --accent:#735986; --crayon-ochre:#e1b453; --crayon-teal:#6caaa0; --crayon-coral:#d99585; --crayon-blue:#83a7c9; }
+[data-design="thoughtspace"] .crayon-underline { position:relative; display:inline-block; isolation:isolate; }
+[data-design="thoughtspace"] :is(h2,h3) .crayon-underline { display:inline-block; font:inherit; color:inherit; margin:0; }
+[data-design="thoughtspace"] .crayon-underline[data-crayon="teal"] { --crayon-ink:var(--crayon-teal); }
+[data-design="thoughtspace"] .crayon-underline[data-crayon="coral"] { --crayon-ink:var(--crayon-coral); }
+[data-design="thoughtspace"] .crayon-underline[data-crayon="blue"] { --crayon-ink:var(--crayon-blue); }
+[data-design="thoughtspace"] .crayon-underline::after { content:''; position:absolute; z-index:-1; left:-2%; right:-2%; bottom:-.025em; height:.14em; background:var(--crayon-ink,var(--crayon-ochre)); mask:url('assets/crayon-grain.svg') repeat; mask-size:32px 32px; clip-path:polygon(0 25%,17% 13%,37% 22%,58% 5%,79% 13%,99% 0,100% 72%,81% 89%,61% 80%,41% 98%,21% 83%,1% 100%); transform:rotate(-.6deg); pointer-events:none; }
+[data-design="thoughtspace"] .section-number { position:relative; isolation:isolate; }
+[data-design="thoughtspace"] .section-number::before { content:''; position:absolute; z-index:-1; inset:2px; border-radius:inherit; background:var(--crayon-ochre); mask:url('assets/crayon-grain.svg') repeat; mask-size:32px 32px; opacity:.8; pointer-events:none; }
+[data-design="thoughtspace"] .crayon-marks { pointer-events:none; }
 [data-design="thoughtspace"] #portfolio::before { opacity:.04; }
 [data-design="thoughtspace"] .hero { max-width:none; margin:0; padding:0; min-height:0; height:165svh; isolation:auto; overflow:clip; }
 [data-design="thoughtspace"] .thought-cover { position:sticky; top:var(--selector-height); height:calc(100svh - var(--selector-height)); min-height:620px; perspective:1250px; perspective-origin:50% 44%; }

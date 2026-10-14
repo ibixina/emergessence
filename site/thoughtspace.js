@@ -1,6 +1,6 @@
-import { initializeSketchbook, connectNotes } from './sketchbook.js?v=11';
+import { initializeSketchbook, connectNotes } from './sketchbook.js?v=13';
 import { ThoughtScene } from './thought-scene.js?v=21';
-import { lateralBrainSketch, dorsalBrainSketch, mindSketch, imagerySketch, recallMindSketch, embodiedMindSketch, probabilitySketch, latentSpaceSketch, latentManifoldSketch } from './cognition-studies.js?v=6';
+import { lateralBrainSketch, dorsalBrainSketch, mindSketch, imagerySketch, recallMindSketch, embodiedMindSketch, probabilitySketch, latentSpaceSketch, latentManifoldSketch } from './cognition-studies.js?v=8';
 import { initializeCipher } from './cipher.js?v=4';
 
 export async function initializeThoughtspace() {
@@ -12,6 +12,10 @@ export async function initializeThoughtspace() {
     document.documentElement.dataset.cognitiveArt = results.every(result => result.status === 'fulfilled') ? 'ready' : 'partial';
   });
   initializeSketchbook({ cover:false, connections:false });
+  document.querySelector('.about-statement h2').innerHTML = 'Computation<br>→ <span class="crayon-underline">cognition.</span>';
+  document.querySelectorAll('.thinking-notes h3').forEach((heading, index) => {
+    heading.innerHTML = `<span class="crayon-underline" data-crayon="${['teal', 'blue', 'coral'][index]}">${heading.textContent}</span>`;
+  });
   const studyUpdates = [
     ['.about-process', mindSketch(), 'Brain, behavior, and the experience of a mind.'],
     ['#memory .working-study', recallMindSketch(), 'a cue / an association / a reconstruction?'],
@@ -34,7 +38,7 @@ export async function initializeThoughtspace() {
   const hero = document.querySelector('.hero');
   hero.innerHTML = `<div class="thought-cover"><div class="thought-cover-page">
     <header class="masthead"><a class="wordmark" href="#top">emergessence</a><p class="disciplines">neuroscience / AI / psychology<br><span>a working sketchbook</span></p></header>
-    <div class="thought-opening"><span class="page-jot">start with a question…</span><h2>How does a<br>mind emerge?</h2><p><del>just more neurons?</del><br><span>or the right connections?</span></p></div>
+    <div class="thought-opening"><span class="page-jot">start with a question…</span><h2>How does a<br><span class="crayon-underline">mind emerge?</span></h2><p><del>just more neurons?</del><br><span>or the right connections?</span></p></div>
     <figure class="thought-cover-study"><span>brain ↔ mind?</span>${lateralBrainSketch()}<figcaption>structure becomes experience… how?</figcaption></figure>
     <figure class="thought-cover-neurons">${mindSketch()}<figcaption>one connection → many possibilities</figcaption></figure>
     <div class="thought-aside"><span>one thought leads<br>into another.</span><svg viewBox="0 0 170 80" aria-hidden="true"><path d="M9 14 C51 4 65 78 151 57 M142 50 L151 57 L139 64"/></svg></div>
@@ -56,6 +60,7 @@ export async function initializeThoughtspace() {
     document.getElementById(id).before(bridge);
   }
   document.querySelector('.section-note').textContent = 'the person behind these notes';
+  document.querySelector('.contact-layout h2').innerHTML = 'Bring a <span class="crayon-underline" data-crayon="coral">question.</span>';
   document.querySelector('.site-footer a').textContent = 'back to the first thought ↑';
 
   function spread(elements, className = '', pairs = []) {

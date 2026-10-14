@@ -14,7 +14,7 @@ const errors = [];
 before(async () => {
   if (!url) {
     const root = fileURLToPath(new URL('../', import.meta.url)).replace(/\/$/, '');
-    const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.webp':'image/webp', '.ttf':'font/ttf' };
+    const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.svg':'image/svg+xml', '.webp':'image/webp', '.ttf':'font/ttf' };
     server = createServer(async (request, response) => {
       try {
         const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);

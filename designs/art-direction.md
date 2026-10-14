@@ -2,7 +2,7 @@
 
 ## Thoughtspace (third direction)
 
-Current cognition artwork is assembled in `cognition-studies.js`: unshaded, loose pen studies of lateral, dorsal, and medial brain views, combined with the approved branching neuron illustration. Notes and connecting paths remain live HTML, SVG, and Canvas elements. People, faces, portraits, and human figures are absent from the active Thoughtspace illustrations. Earlier outlined, shaded, and profile studies are retired.
+Current cognition artwork is assembled in `cognition-studies.js`: unshaded, loose pen studies of lateral, dorsal, and medial brain views, combined with the approved branching neuron illustration. Sparse ochre, muted teal, soft coral, and dusty blue crayon strokes sit beneath selected branches, curves, and diagram nodes, with small patches inside the brain studies. Headlines and chapter numbers use matching textured accents. The coloring is a separate SVG/CSS layer using `site/crayon.js` and the small reusable `site/assets/crayon-grain.svg` texture; the original raster artwork is preserved. Notes and connecting paths remain live HTML, SVG, and Canvas elements. People, faces, portraits, and human figures are absent from the active Thoughtspace illustrations. Earlier outlined, shaded, and profile studies are retired.
 
 The three current brain assets were made with the built-in image-generation tool in generate mode, with transparent backgrounds. Their alpha is preserved, including open areas within the drawings. The files are copied into the project. No generated lettering or page collage is used. These are illustrative notebook studies rather than clinical anatomical plates.
 

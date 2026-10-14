@@ -3,7 +3,7 @@ import {
   recallSketch, memorySketch, predictionSketch, interactionSketch,
   activationSketch, layersSketch, climbingSketch, compressionSketch,
   terminalSketch, lifeSketch, processSketch, unitSketch, penMarks
-} from './notebook-studies.js?v=3';
+} from './notebook-studies.js?v=5';
 
 export function connectNotes(container, pairs) {
   const namespace = 'http://www.w3.org/2000/svg';

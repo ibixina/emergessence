@@ -1,6 +1,6 @@
 # Emergessence
 
-Shishir's portfolio, presented as a connected sketchbook of cognition, brain studies, models, and experiments. Scrolling travels forward through the notes and drawings together, with pauses to read each spread.
+Shishir's portfolio, presented as a connected sketchbook of cognition, brain studies, models, and experiments. Sparse ochre, teal, coral, and dusty blue crayon marks add color beneath the handwriting and fine pen drawings. Scrolling travels forward through the notes and drawings together, with pauses to read each spread.
 
 Serve the repository root with any static HTTP server. For local development:
 

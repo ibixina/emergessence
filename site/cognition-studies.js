@@ -1,9 +1,12 @@
+import { crayonStrokes } from './crayon.js?v=2';
+
 function sketch(content, description) {
   return `<svg class="study-sketch cognition-sketch scientific-study" viewBox="0 0 420 240" role="img" aria-label="${description}">${content}</svg>`;
 }
 
-function stroke(d, className = '') {
-  return `<path class="${className}" d="${d}"/>`;
+function stroke(d, className = '', color = className === 'violet' ? 'teal' : null) {
+  const pigment = color ? crayonStrokes([{ d, color }]) : '';
+  return `${pigment}<path class="${className}" d="${d}"/>`;
 }
 
 function strokes(paths, className = '') {
@@ -21,7 +24,29 @@ function arrow(d) {
 function illustration(name, x = 45, y = 0, width = 330, height = 215) {
   const filename = name === 'neurons' ? 'neuron.webp' : `cognition-${name}-v4.webp`;
   const source = new URL(`./assets/${filename}`, import.meta.url).href;
-  return `<image href="${source}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/>`;
+  const [artWidth, artHeight] = name === 'neurons' ? [1958, 803] : name === 'dorsal' ? [1254, 1254] : [1536, 1024];
+  const marks = {
+    neurons:[
+      { d:'M605 570 Q643 528 670 494 Q697 462 720 416 M655 514 Q610 492 574 478 M664 501 Q687 539 687 587', weight:32 },
+      { d:'M1277 353 Q1304 324 1321 296 Q1343 265 1344 237 M1312 310 Q1351 313 1388 327', color:'blue', weight:30 },
+      { d:'M731 433 C854 403 901 469 1015 448 S1186 401 1259 363', color:'ochre', weight:20 },
+      { d:'M573 478 Q610 492 635 503 M692 553 Q690 573 686 592', color:'coral', weight:24 }
+    ],
+    lateral:[
+      { d:'M385 273 C435 235 499 215 555 228 M375 299 C425 257 489 241 555 251 M366 325 C418 284 477 269 535 277', color:'coral', weight:32 },
+      { d:'M1017 280 C1040 243 1070 221 1100 223 M1044 302 C1060 268 1090 245 1111 249', color:'blue', weight:28 }
+    ],
+    dorsal:[
+      { d:'M374 398 Q416 366 467 389 M368 426 Q410 395 466 417', color:'coral', weight:28 },
+      { d:'M782 500 Q813 465 865 488 M780 530 Q820 498 864 513', color:'blue', weight:28 }
+    ],
+    medial:[
+      { d:'M453 265 Q502 245 553 260 M449 293 Q504 271 552 282', weight:32 },
+      { d:'M1000 570 Q1055 533 1115 550 M1007 598 Q1068 560 1119 577', color:'ochre', weight:28 }
+    ]
+  };
+  const color = `<svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="0 0 ${artWidth} ${artHeight}" aria-hidden="true">${crayonStrokes(marks[name], artWidth, artHeight)}</svg>`;
+  return `${color}<image href="${source}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/>`;
 }
 
 export function lateralBrainSketch() {
@@ -49,7 +74,7 @@ export function imagerySketch() {
 }
 
 export function recallMindSketch() {
-  return sketch(`${illustration('medial',103,15,265,185)}${stroke('M28 90 l25 -17 l26 15 l-2 28 l-25 14 l-25 -14 Z M28 90 L52 105 L79 88 M52 105 L52 130 M52 105 L51 73','construction')}${arrow('M78 117 Q99 102 122 119 M111 114 L122 119 L112 125')}${stroke('M322 174 l26 -17 l26 16 l-2 29 l-26 13 l-25 -15 Z M322 174 L346 189 L374 173 M346 189 L346 215 M346 189 L348 157','brain-detail')}${arrow('M302 149 Q331 145 341 157 M333 151 L341 157 L331 158')}${note('a cue',19,158)}${note('reconstruct?',275,235,'violet')}`, 'A faint cube enters a pen brain study and a fuller cube reappears, asking about reconstruction in memory.');
+  return sketch(`${crayonStrokes([{ d:'M40 89 L52 81 L67 88 M335 173 L348 166 L362 173', color:'ochre', weight:12 }])}${illustration('medial',103,15,265,185)}${stroke('M28 90 l25 -17 l26 15 l-2 28 l-25 14 l-25 -14 Z M28 90 L52 105 L79 88 M52 105 L52 130 M52 105 L51 73','construction')}${arrow('M78 117 Q99 102 122 119 M111 114 L122 119 L112 125')}${stroke('M322 174 l26 -17 l26 16 l-2 29 l-26 13 l-25 -15 Z M322 174 L346 189 L374 173 M346 189 L346 215 M346 189 L348 157','brain-detail')}${arrow('M302 149 Q331 145 341 157 M333 151 L341 157 L331 158')}${note('a cue',19,158)}${note('reconstruct?',275,235,'violet')}`, 'A faint cube enters a pen brain study and a fuller cube reappears, asking about reconstruction in memory.');
 }
 
 export function embodiedMindSketch() {
@@ -69,17 +94,17 @@ export function attentionSketch() {
 }
 
 export function probabilitySketch() {
-  const prior = { mean:0, deviation:1.2, className:'construction' };
-  const evidence = { mean:1.3, deviation:.7, className:'brain-detail' };
+  const prior = { mean:0, deviation:1.2, className:'construction', color:'ochre' };
+  const evidence = { mean:1.3, deviation:.7, className:'brain-detail', color:'blue' };
   const variance = 1 / (1 / prior.deviation ** 2 + 1 / evidence.deviation ** 2);
-  const posterior = { mean:variance * evidence.mean / evidence.deviation ** 2, deviation:Math.sqrt(variance), className:'violet' };
-  const curves = [prior, evidence, posterior].map(({mean,deviation,className}) => {
+  const posterior = { mean:variance * evidence.mean / evidence.deviation ** 2, deviation:Math.sqrt(variance), className:'violet', color:'coral' };
+  const curves = [prior, evidence, posterior].map(({mean,deviation,className,color}) => {
     const points = Array.from({length:111}, (_,index) => {
       const value = -4 + index * 8 / 110;
       const density = Math.exp(-.5 * ((value - mean) / deviation) ** 2) / (deviation * Math.sqrt(2 * Math.PI));
       return `${index ? 'L' : 'M'}${(31 + (value + 4) * 43).toFixed(2)} ${(171 - density * 172).toFixed(2)}`;
     }).join(' ');
-    return stroke(points, className);
+    return stroke(points, className, color);
   }).join('');
   return sketch(`${stroke('M26 172 Q199 169 389 173 M31 177 L32 45 M25 54 L32 45 L37 56', 'construction')}${curves}${note('prior',83,114,'tiny')}${note('likelihood',265,91,'tiny')}${note('posterior',186,40,'violet')}${arrow('M235 44 Q251 56 245 66 M240 58 L245 66 L251 58')}${note('beliefs + evidence → updated beliefs',23,205,'tiny')}${note('p(h | x) ∝ p(x | h) p(h)',58,232,'violet')}`, 'Gaussian prior, likelihood, and their correctly calculated Gaussian posterior, with a handwritten form of Bayes’ rule.');
 }

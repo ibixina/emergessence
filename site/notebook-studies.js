@@ -1,9 +1,12 @@
+import { crayonStrokes } from './crayon.js?v=2';
+
 function svg(content, label, className = '') {
   return `<svg class="study-sketch ${className}" viewBox="0 0 420 240" role="img" aria-label="${label}">${content}</svg>`;
 }
 
-function line(d, className = '') {
-  return `<path class="${className}" d="${d}"/>`;
+function line(d, className = '', color = className === 'violet' ? 'teal' : null) {
+  const pigment = color ? crayonStrokes([{ d, color }]) : '';
+  return `${pigment}<path class="${className}" d="${d}"/>`;
 }
 
 function label(text, x, y, className = '') {
@@ -58,23 +61,23 @@ export function interactionSketch() {
 
 export function activationSketch() {
   const paths = [
-    {name:'tanh', color:'violet', fn:x=>Math.tanh(x)},
-    {name:'ReLU', color:'', fn:x=>Math.max(0,x)},
-    {name:'sigmoid', color:'faint', fn:x=>1/(1+Math.exp(-x))}
+    {name:'tanh', className:'violet', color:'teal', fn:x=>Math.tanh(x)},
+    {name:'ReLU', className:'', color:'coral', fn:x=>Math.max(0,x)},
+    {name:'sigmoid', className:'faint', color:'blue', fn:x=>1/(1+Math.exp(-x))}
   ];
-  const curves=paths.map(({fn,color}) => {
+  const curves=paths.map(({fn,className,color}) => {
     const points=Array.from({length:91},(_,index)=>{
       const x=-3+index/15;
       return `${index?'L':'M'}${(30+(x+3)*50).toFixed(2)} ${(149-fn(x)*34).toFixed(2)}`;
     }).join(' ');
-    return line(points,color);
+    return line(points,className,color);
   }).join('');
   return svg(`${line('M22 149 Q198 147 351 150 M180 211 L180 24 M175 33 L180 24 L185 33 M342 145 L351 150 L342 154','faint')}${curves}${label('x',354,166,'tiny')}${label('tanh',339,83,'violet')}${label('ReLU',270,32)}${label('sigmoid',282,130,'tiny')}${label('f(x): another thing to learn?',29,236,'violet')}`, 'Accurate sketches of tanh, ReLU, and sigmoid activation functions, plotted over x from minus three to three.');
 }
 
 export function layersSketch() {
   const columns=[[46,[60,116,172]],[153,[38,91,144,197]],[267,[64,123,179]],[373,[91,151]]];
-  let paths='';
+  let paths=crayonStrokes([{ d:'M150 89 L157 95 M264 121 L271 127', color:'ochre', weight:13 }]);
   columns.slice(0,-1).forEach(([x,ys],column)=>{
     const [nextX,nextYs]=columns[column+1];
     ys.forEach(y=>nextYs.forEach((nextY,index)=>{ paths+=line(`M${x+6} ${y} Q${(x+nextX)/2} ${(y+nextY)/2 + (index%2?2:-2)} ${nextX-6} ${nextY}`,'faint'); }));
@@ -88,14 +91,14 @@ export function climbingSketch() {
 }
 
 export function compressionSketch() {
-  let blocks='';
+  let blocks=crayonStrokes([{ d:'M295 110 L354 110', weight:12 }]);
   for(let index=0;index<5;index++) blocks+=box(26+index*2,37+index*27,104,21);
   for(let index=0;index<3;index++) blocks+=box(287+index,79+index*24,78,19);
   return svg(`${blocks}${label('teacher',44,220)}${label('student',288,220)}${arrow(145,118,275,119,-18)}${label('distill',168,89,'violet')}${label('keep which',155,167)}${label('representations?',149,190)}`, 'A teacher network with several layers passes knowledge to a smaller student network.');
 }
 
 export function terminalSketch() {
-  return svg(`${box(26,23,369,185)}${line('M28 49 L392 46','faint')}${label('> video → text',47,82)}${label('.  :  *  #  @',115,119,'terminal-mark')}${label(':  #  @  #  :',115,148,'terminal-mark')}${label('.  :  *  :  .',115,178,'terminal-mark')}${label('same frames, different alphabet',36,235,'violet')}`, 'Video pixels are mapped to characters and shown inside a roughly sketched terminal.');
+  return svg(`${crayonStrokes([{ d:'M35 35 L109 35', color:'ochre', weight:13 }])}${box(26,23,369,185)}${line('M28 49 L392 46','faint')}${label('> video → text',47,82)}${label('.  :  *  #  @',115,119,'terminal-mark')}${label(':  #  @  #  :',115,148,'terminal-mark')}${label('.  :  *  :  .',115,178,'terminal-mark')}${label('same frames, different alphabet',36,235,'violet')}`, 'Video pixels are mapped to characters and shown inside a roughly sketched terminal.');
 }
 
 export function lifeSketch() {
