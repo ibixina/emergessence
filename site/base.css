@@ -197,3 +197,6 @@ a:focus-visible,button:focus-visible,summary:focus-visible { outline:2px solid v
 .cipher-rune { display:none; position:absolute; inset:0; overflow:clip; place-items:center; line-height:inherit; font-size:.88em; }
 .cipher-pending .cipher-original { opacity:0; }
 .cipher-pending .cipher-rune { display:grid; }
+.cipher-term { display:inline-block; white-space:nowrap; }
+.cipher-accessible { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.cipher-svg-char.cipher-pending { font-size:.88em; }

@@ -66,7 +66,7 @@ export function brainConnectionsSketch() {
 }
 
 export function mindSketch() {
-  return sketch(`${illustration('neurons',12,26,397,183)}${note('connections ↔ experience?',40,235,'violet')}`, 'Delicate branching neurons with a question about connections and experience.');
+  return `<svg class="study-sketch cognition-sketch scientific-study neuron-study" viewBox="0 0 420 176" role="img" aria-label="A branching neuron study in fine pen, with colored marks tracing the connections.">${illustration('neurons',0,0,420,176)}</svg>`;
 }
 
 export function imagerySketch() {
@@ -112,27 +112,4 @@ export function probabilitySketch() {
 export function latentSpaceSketch() {
   const points = [[72,142],[94,130],[89,156],[123,119],[139,108],[154,127],[184,103],[217,121],[236,104],[268,87],[279,105],[306,77],[328,91]];
   return sketch(`${stroke('M38 193 Q200 194 377 191 M43 198 L44 32 M37 42 L44 32 L49 43 M367 186 L377 191 L367 197', 'construction')}${stroke('M56 158 C92 72 139 83 180 103 C218 151 242 64 302 58 C337 53 362 89 365 126 M63 169 C90 101 142 105 178 123 C218 165 247 84 302 79 C330 70 348 95 352 131', 'construction')}${points.map(([x,y],index) => `<circle class="latent-point ${index===6?'violet':''}" cx="${x}" cy="${y}" r="${index===6?4:2.1}"/>`).join('')}${stroke('M70 142 C101 122 132 111 154 127 C177 140 201 128 236 104 S281 84 306 77', 'violet')}${arrow('M169 78 Q186 80 185 98 M180 89 L185 98 L190 89')}${note('a thought?',113,65,'violet')}${note('z1',380,211,'tiny')}${note('z2',14,34,'tiny')}${note('nearby ≠ identical',69,227,'violet')}`, 'A conceptual latent space with two coordinates, grouped representation points, and a route through a neighborhood.');
-}
-
-export function latentManifoldSketch() {
-  function point(u,v) {
-    const fold = Math.sin(u * Math.PI * 1.6 + v * .7);
-    return [46 + u * 285 + v * 58, 69 + v * 95 + fold * 40 - u * 17];
-  }
-  function curve(fixed, across) {
-    return Array.from({length:61},(_,index) => {
-      const t = index / 60;
-      const [x,y] = across ? point(t,fixed) : point(fixed,t);
-      return `${index ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`;
-    }).join(' ');
-  }
-  const grid = Array.from({length:9},(_,index) => stroke(curve(index/8,true),'construction')).join('')
-    + Array.from({length:15},(_,index) => stroke(curve(index/14,false),'construction')).join('');
-  const route = Array.from({length:61},(_,index) => {
-    const t = index/60;
-    const [x,y] = point(.1 + t * .77,.42 + Math.sin(t*Math.PI)*.25);
-    return `${index ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`;
-  }).join(' ');
-  const [x,y] = point(.53,.66);
-  return sketch(`${grid}${stroke(curve(0,true),'brain-detail')}${stroke(curve(1,true),'brain-detail')}${stroke(curve(0,false),'brain-detail')}${stroke(curve(1,false),'brain-detail')}${stroke(route,'violet')}<circle class="latent-point violet" cx="${x}" cy="${y}" r="3.4"/>${note('many dimensions…',7,30,'tiny')}${note('…a few ways to move?',168,223,'violet')}${arrow('M80 193 Q108 197 130 176 M121 182 L130 176 L127 187')}`, 'A folded conceptual latent manifold, drawn as a faint pen mesh with an ink trajectory across its surface.');
 }

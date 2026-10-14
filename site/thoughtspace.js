@@ -1,7 +1,9 @@
-import { initializeSketchbook, connectNotes } from './sketchbook.js?v=13';
-import { ThoughtScene } from './thought-scene.js?v=21';
-import { lateralBrainSketch, dorsalBrainSketch, mindSketch, imagerySketch, recallMindSketch, embodiedMindSketch, probabilitySketch, latentSpaceSketch, latentManifoldSketch } from './cognition-studies.js?v=8';
-import { initializeCipher } from './cipher.js?v=4';
+import { initializeSketchbook, connectNotes } from './sketchbook.js?v=14';
+import { ThoughtScene } from './thought-scene.js?v=23';
+import { lateralBrainSketch, dorsalBrainSketch, mindSketch, imagerySketch, recallMindSketch, embodiedMindSketch, probabilitySketch, latentSpaceSketch } from './cognition-studies.js?v=9';
+import { initializeCipher, markCipherTerms } from './cipher.js?v=5';
+import { latentStudy, initializeLatentStudy } from './latent-study.js?v=1';
+import { EmergenceColony } from './emergence-ants.js?v=1';
 
 export async function initializeThoughtspace() {
   const artworkReady = Promise.allSettled(['lateral', 'dorsal', 'medial'].map(name => {
@@ -12,12 +14,12 @@ export async function initializeThoughtspace() {
     document.documentElement.dataset.cognitiveArt = results.every(result => result.status === 'fulfilled') ? 'ready' : 'partial';
   });
   initializeSketchbook({ cover:false, connections:false });
-  document.querySelector('.about-statement h2').innerHTML = 'Computation<br>→ <span class="crayon-underline">cognition.</span>';
+  document.querySelector('.about-statement h2').innerHTML = 'Mind, brain,<br>and <span class="crayon-underline">models.</span>';
   document.querySelectorAll('.thinking-notes h3').forEach((heading, index) => {
     heading.innerHTML = `<span class="crayon-underline" data-crayon="${['teal', 'blue', 'coral'][index]}">${heading.textContent}</span>`;
   });
   const studyUpdates = [
-    ['.about-process', mindSketch(), 'Brain, behavior, and the experience of a mind.'],
+    ['.about-process', mindSketch(), 'From neural activity to cognition.'],
     ['#memory .working-study', recallMindSketch(), 'a cue / an association / a reconstruction?'],
     ['#imagery .working-study', imagerySketch(), 'an internal world, without new sensory input?'],
     ['#environment .working-study', embodiedMindSketch(), 'seeing changes action; action changes seeing.'],
@@ -29,21 +31,16 @@ export async function initializeThoughtspace() {
     figure.innerHTML = `${drawing}<figcaption>${caption}</figcaption>`;
   }
   document.querySelector('.method-jot .pen-practice').outerHTML = `<figure class="method-brain">${dorsalBrainSketch()}<figcaption>many parts. one mind?</figcaption></figure>`;
-  const cognitiveNotes = document.createElement('aside');
-  cognitiveNotes.className = 'cognitive-notes';
-  cognitiveNotes.setAttribute('aria-label', 'Probabilistic modeling and latent spaces');
-  cognitiveNotes.innerHTML = `<div class="cognitive-note" id="probabilistic-modeling"><h3>Probabilistic modeling</h3><p>How certain is the model?</p><figure class="working-study">${probabilitySketch()}<figcaption>prior + evidence → posterior</figcaption></figure><span>Keep uncertainty in the picture.<br>Update the belief when the evidence changes.</span></div><div class="cognitive-note" id="latent-spaces"><h3>Latent spaces</h3><p>What structure lives in a representation?</p><figure class="working-study">${latentManifoldSketch()}<figcaption>many observations → hidden coordinates</figcaption></figure><span>A compact representation.<br>Which relationships survive?</span></div>`;
-  document.getElementById('research').append(cognitiveNotes);
-  document.getElementById('latent-spaces').insertAdjacentHTML('beforeend', '<p class="representation-jot"><span class="symbol-alphabet" aria-label="Shishir written in the original symbol alphabet">⟆⊦ǀ⟆⊦ǀⱤ</span><span>another alphabet…<br>the same meaning?</span></p>');
+  document.getElementById('research').insertAdjacentHTML('beforeend', `<div class="cognitive-note" id="probabilistic-modeling"><h3>Probabilistic modeling</h3><p>How certain is the model?</p><figure class="working-study">${probabilitySketch()}<figcaption>prior + evidence → posterior</figcaption></figure><span>Keep uncertainty in the picture.<br>Update the belief when the evidence changes.</span></div><div class="cognitive-note" id="latent-spaces"><h3>Latent spaces</h3><p class="latent-description">Two coordinates can describe a point on a surface folded through three dimensions. The latent space makes those underlying factors explicit.</p>${latentStudy()}<p class="latent-footnote">A geometric example. Learned representations depend on the data and training objective.</p></div>`);
   const hero = document.querySelector('.hero');
   hero.innerHTML = `<div class="thought-cover"><div class="thought-cover-page">
-    <header class="masthead"><a class="wordmark" href="#top">emergessence</a><p class="disciplines">neuroscience / AI / psychology<br><span>a working sketchbook</span></p></header>
-    <div class="thought-opening"><span class="page-jot">start with a question…</span><h2>How does a<br><span class="crayon-underline">mind emerge?</span></h2><p><del>just more neurons?</del><br><span>or the right connections?</span></p></div>
+    <header class="masthead"><a class="wordmark" href="#top">emergessence</a><p class="disciplines">neuroscience / cognitive science / math</p></header>
+    <div class="thought-opening"><span class="page-jot">start with a question…</span><h2 aria-label="How does a mind emerge?">How does a<br><span class="crayon-underline">mind <span class="emergence-word"><span class="emergence-ink">emerge</span></span>?</span></h2><p><del>just more neurons?</del><br><span>or the right connections?</span></p></div>
     <figure class="thought-cover-study"><span>brain ↔ mind?</span>${lateralBrainSketch()}<figcaption>structure becomes experience… how?</figcaption></figure>
     <figure class="thought-cover-neurons">${mindSketch()}<figcaption>one connection → many possibilities</figcaption></figure>
     <div class="thought-aside"><span>one thought leads<br>into another.</span><svg viewBox="0 0 170 80" aria-hidden="true"><path d="M9 14 C51 4 65 78 151 57 M142 50 L151 57 L139 64"/></svg></div>
     <div class="thought-signature"><h1 class="glyph" aria-label="Shishir">Shishir</h1><p class="byline">computational cognitive science</p></div>
-    <a class="thought-enter" href="#first-connection"><span>follow the connections</span><span aria-hidden="true">↓</span></a>
+    <a class="thought-enter" href="#first-connection"><span>about & research</span><span aria-hidden="true">↓</span></a>
     <span class="thought-folio">notes in the making / 01</span>
   </div></div><span id="first-connection" class="thought-entry-point" aria-hidden="true"></span>`;
   hero.querySelector('.thought-opening').append(hero.querySelector('.thought-cover-neurons'));
@@ -59,8 +56,8 @@ export async function initializeThoughtspace() {
     bridge.innerHTML = `<p>${question}</p><span>${note}</span><svg viewBox="0 0 250 65" aria-hidden="true"><path d="M228 5 C119 -9 100 63 17 50 M25 42 L17 50 L28 56"/></svg>`;
     document.getElementById(id).before(bridge);
   }
-  document.querySelector('.section-note').textContent = 'the person behind these notes';
-  document.querySelector('.contact-layout h2').innerHTML = 'Bring a <span class="crayon-underline" data-crayon="coral">question.</span>';
+  document.querySelector('#about .section-note')?.remove();
+  document.querySelector('.contact-layout h2').innerHTML = 'Get in <span class="crayon-underline" data-crayon="coral">touch.</span>';
   document.querySelector('.site-footer a').textContent = 'back to the first thought ↑';
 
   function spread(elements, className = '', pairs = []) {
@@ -78,8 +75,9 @@ export async function initializeThoughtspace() {
   spread([document.querySelector('.thinking-notes'), document.querySelector('.about-specifications')], 'thought-methods');
   spread([document.getElementById('memory'), document.getElementById('imagery')], 'thought-pair', [['#memory h2', '#imagery h2', -24]]);
   spread([document.getElementById('environment'), document.querySelector('.research-crossnotes')], 'thought-pair thought-crossnotes', [['#environment .ink-afterthought', '.scratch-list', 22]]);
-  spread([cognitiveNotes], 'thought-models');
-  connectNotes(cognitiveNotes, [['#probabilistic-modeling h3', '#latent-spaces h3', -18]]);
+  spread([document.getElementById('probabilistic-modeling')], 'thought-models thought-probability');
+  spread([document.getElementById('latent-spaces')], 'thought-models thought-latent');
+  initializeLatentStudy(document.getElementById('latent-spaces'));
   const experiments = [...document.querySelectorAll('.project')];
   for (let index = 0; index < experiments.length; index += 2) {
     const pair = experiments.slice(index, index + 2);
@@ -90,6 +88,8 @@ export async function initializeThoughtspace() {
   await artworkReady;
   const scene = new ThoughtScene(hero);
   const topInset = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--selector-height')) || 0;
-  initializeCipher('.wordmark', { rootMargin: `-${topInset}px 0px -8% 0px` });
+  const terms = markCipherTerms(document.getElementById('portfolio'));
+  initializeCipher([document.querySelector('.wordmark'), ...terms], { rootMargin: `-${topInset}px 0px -8% 0px` });
+  scene.emergence = new EmergenceColony(document.querySelector('.emergence-word'), scene);
   return scene;
 }

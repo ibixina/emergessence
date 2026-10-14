@@ -280,6 +280,209 @@ test('backward flings, tall reading boundaries, and page controls remain functio
   await context.close();
 });
 
+test('latent-space controls preserve correspondence while changing position and projection', async () => {
+  const { context, page } = await open();
+  await page.evaluate(() => window.testScene.navigate('#latent-spaces'));
+  await page.waitForTimeout(450);
+  const index = (await snapshot(page)).index;
+  const views = () => page.locator('.latent-plot').evaluateAll(elements => elements.map(svg => ({
+    drawing:svg.innerHTML,
+    neighbors:[...svg.querySelectorAll('[data-neighbor="true"]')].map(point => point.dataset.sample).sort(),
+    marker:[...svg.querySelectorAll('.latent-selection')].map(point => [Number(point.getAttribute('cx')), Number(point.getAttribute('cy'))])
+  })));
+  const initial = await views();
+  assert.ok(initial[0].neighbors.length > 0);
+  assert.deepEqual(initial[0].neighbors, initial[1].neighbors);
+  const position = page.getByRole('slider', { name:'Trace a path' });
+  await position.focus();
+  await position.press('End');
+  await page.waitForFunction(() => document.querySelector('.latent-position-value').textContent === 'z = (1.00, 0.50)');
+  const end = await views();
+  assert.notDeepEqual(end[0].neighbors, initial[0].neighbors);
+  assert.deepEqual(end[0].neighbors, end[1].neighbors);
+  assert.notDeepEqual(end[0].marker, initial[0].marker);
+  assert.notDeepEqual(end[1].marker, initial[1].marker);
+  const angle = page.getByRole('slider', { name:'Rotate the surface' });
+  await angle.focus();
+  await angle.press('ArrowRight');
+  await page.waitForFunction(() => document.querySelector('.latent-angle-value').textContent === '-109°');
+  const rotated = await views();
+  assert.notEqual(rotated[0].drawing, end[0].drawing);
+  assert.equal(rotated[1].drawing, end[1].drawing);
+  assert.deepEqual(rotated[0].neighbors, end[0].neighbors);
+  await position.focus();
+  await position.press('Home');
+  await page.waitForFunction(() => document.querySelector('.latent-position-value').textContent === 'z = (0.00, 0.50)');
+  const start = await views();
+  assert.deepEqual(start[0].neighbors, start[1].neighbors);
+  assert.equal((await snapshot(page)).index, index, 'using sliders changed the reading spread');
+  await context.close();
+});
+
+test('latent-space controls fit mobile and work with reduced motion', async () => {
+  const { context, page } = await open({ viewport:{ width:390, height:844 }, reducedMotion:'reduce' });
+  const position = page.getByRole('slider', { name:'Trace a path' });
+  await position.focus();
+  await position.press('ArrowRight');
+  await page.waitForFunction(() => document.querySelector('.latent-position-value').textContent.startsWith('z = (0.43,'));
+  const layout = await page.locator('.latent-controls').evaluate(element => ({
+    width:innerWidth,
+    bounds:[...element.querySelectorAll('label, input, output')].map(control => {
+      const { left, right, height } = control.getBoundingClientRect();
+      return { left, right, height };
+    })
+  }));
+  assert.ok(layout.bounds.every(bounds => bounds.left >= 0 && bounds.right <= layout.width), 'a latent-space control overflows mobile');
+  assert.ok(layout.bounds.filter((_, index) => index === 1 || index === 4).every(bounds => bounds.height >= 44), 'sliders need usable touch targets');
+  assert.equal(await page.locator('.thought-stage').isVisible(), false);
+  await context.close();
+});
+
+test('mind and cognition use the wordmark cipher throughout the notebook', async () => {
+  const { context, page } = await open();
+  const coverage = await page.evaluate(() => {
+    const terms = [...document.querySelectorAll('.cipher-term')];
+    const walker = document.createTreeWalker(document.getElementById('portfolio'), NodeFilter.SHOW_TEXT);
+    const missed = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.parentElement.closest('script, style, .cipher-term, [aria-hidden="true"]') && /\b(mind|cognition)\b/i.test(node.textContent)) missed.push(node.textContent);
+    }
+    return { count:terms.length, missed, tabStops:terms.filter(term => term.hasAttribute('tabindex')).length };
+  });
+  assert.ok(coverage.count >= 9, 'mentions in headings, captions, and diagrams need the cipher');
+  assert.deepEqual(coverage.missed, []);
+  assert.equal(coverage.tabStops, 0, 'decorative words must not add keyboard stops');
+  const word = page.locator('.thought-opening h2 .cipher-term');
+  await page.waitForFunction(() => document.querySelector('.thought-opening h2 .cipher-term').dataset.cipherState === 'resolved');
+  const bounds = await word.boundingBox();
+  const accessible = await page.locator('.thought-opening h2').ariaSnapshot();
+  assert.match(accessible, /How does a mind emerge\?/);
+  await word.hover();
+  await page.waitForFunction(() => document.querySelector('.thought-opening h2 .cipher-pending'));
+  const decoding = await word.boundingBox();
+  assert.ok(Math.abs(bounds.width - decoding.width) < .01, 'HTML text shifted while decoding');
+  assert.equal(await page.locator('.thought-opening h2').ariaSnapshot(), accessible, 'screen readers received scrambled text');
+  await page.waitForFunction(() => document.querySelector('.thought-opening h2 .cipher-term').dataset.cipherState === 'resolved');
+  await context.close();
+});
+
+test('later spreads decode on arrival and SVG labels retain their text advance', async () => {
+  const { context, page } = await open();
+  const label = page.locator('.method-brain svg .cipher-term');
+  assert.equal(await label.getAttribute('data-cipher-state'), null, 'a hidden diagram decoded before its page arrived');
+  await navigate(page, 2);
+  assert.equal(await label.getAttribute('data-cipher-state'), 'decoding');
+  await page.waitForFunction(() => document.querySelector('.method-brain svg .cipher-term').dataset.cipherState === 'resolved');
+  const width = await label.evaluate(element => element.getComputedTextLength());
+  assert.equal(await label.textContent(), 'mind');
+  await label.hover();
+  await page.waitForFunction(() => document.querySelector('.method-brain svg .cipher-pending'));
+  const decodingWidth = await label.evaluate(element => element.getComputedTextLength());
+  assert.ok(Math.abs(width - decodingWidth) < .01, 'SVG labels shifted while decoding');
+  await page.waitForFunction(() => document.querySelector('.method-brain svg .cipher-term').dataset.cipherState === 'resolved');
+  assert.equal(await label.textContent(), 'mind');
+  await navigate(page, 4);
+  await page.waitForFunction(() => document.querySelector('#environment h2 .cipher-term').dataset.cipherState === 'resolved');
+  await page.locator('#environment summary').focus();
+  await page.waitForFunction(() => document.querySelector('#environment h2 .cipher-term').dataset.cipherState === 'decoding');
+  assert.equal(await page.locator('#environment').getAttribute('open'), '', 'replaying the cipher changed the disclosure');
+  await context.close();
+});
+
+test('mobile taps replay the cipher and reduced motion keeps the original words', async () => {
+  const { context, page } = await open({ viewport:{ width:390, height:844 }, isMobile:true, hasTouch:true });
+  const word = page.locator('.thought-opening h2 .cipher-term');
+  await page.waitForFunction(() => document.querySelector('.thought-opening h2 .cipher-term').dataset.cipherState === 'resolved');
+  await word.tap();
+  await page.waitForFunction(() => document.querySelector('.thought-opening h2 .cipher-pending'));
+  await page.emulateMedia({ reducedMotion:'reduce' });
+  await page.waitForFunction(() => !document.querySelector('.cipher-pending'));
+  assert.match(await page.locator('.thought-opening h2').ariaSnapshot(), /How does a mind emerge\?/);
+  await context.close();
+  const reduced = await open({ reducedMotion:'reduce' });
+  assert.equal(await reduced.page.locator('.cipher-term, .cipher-char, .cipher-svg-char').count(), 0);
+  assert.equal(await reduced.page.locator('.about-statement h2').textContent(), 'Mind, brain,and models.');
+  await reduced.context.close();
+});
+
+test('emerge starts as handwriting, reveals ants, and leaves a faint word without layout changes', async () => {
+  const { context, page } = await open();
+  await page.waitForFunction(() => window.testScene.emergence?.ants.length);
+  const word = page.locator('.emergence-word');
+  const original = await word.boundingBox();
+  const accessible = await page.locator('.thought-opening h2').ariaSnapshot();
+  assert.match(accessible, /How does a mind emerge\?/);
+  const initial = await page.evaluate(() => {
+    const colony = window.testScene.emergence;
+    return { count:colony.ants.length, released:colony.ants.some(ant => ant.released), opacity:Number(colony.ink.style.opacity), elapsed:colony.elapsed };
+  });
+  assert.ok(initial.count > 100 && initial.count <= 420);
+  assert.equal(initial.released, false);
+  assert.equal(initial.opacity, 1);
+  assert.ok(initial.elapsed < 1.9);
+  await page.waitForFunction(() => document.querySelector('.emergence-word').dataset.emergenceState === 'wandering');
+  const dispersed = await page.evaluate(() => {
+    const colony = window.testScene.emergence;
+    return {
+      released:colony.ants.every(ant => ant.released),
+      traveled:colony.ants.filter(ant => Math.hypot(ant.x - ant.startX, ant.y - ant.startY) > 20).length,
+      opacity:Number(colony.ink.style.opacity),
+      pixels:colony.canvas.width * colony.canvas.height,
+      canvases:document.querySelectorAll('.emergence-colony').length,
+      children:colony.word.childElementCount
+    };
+  });
+  assert.equal(dispersed.released, true);
+  assert.ok(dispersed.traveled > initial.count / 2, 'ants did not leave their letter strokes');
+  assert.equal(dispersed.opacity, .14);
+  assert.ok(dispersed.pixels <= 2_000_000);
+  assert.equal(dispersed.canvases, 1);
+  assert.equal(dispersed.children, 4, 'ants must not be individual DOM elements');
+  const after = await word.boundingBox();
+  assert.ok(Math.abs(original.width - after.width) < .01 && Math.abs(original.height - after.height) < .01);
+  assert.equal(await page.locator('.thought-opening h2').ariaSnapshot(), accessible);
+  assert.equal(await page.locator('.emergence-colony').evaluate(canvas => getComputedStyle(canvas).pointerEvents), 'none');
+  await context.close();
+});
+
+test('the ant colony stops completely off the cover, resumes, and respects reduced motion', async () => {
+  const { context, page } = await open({ viewport:{ width:390, height:844 }, deviceScaleFactor:3 });
+  await page.waitForFunction(() => window.testScene.emergence?.ants.length);
+  await navigate(page, 1);
+  const state = () => page.evaluate(() => {
+    const colony = window.testScene.emergence;
+    return { running:colony.running, frame:colony.frame, elapsed:colony.elapsed, hidden:colony.canvas.hidden };
+  });
+  const paused = await state();
+  assert.equal(paused.running, false);
+  assert.equal(paused.frame, 0);
+  assert.equal(paused.hidden, true);
+  await page.waitForTimeout(250);
+  assert.deepEqual(await state(), paused, 'the colony kept updating off-screen');
+  await navigate(page, 0);
+  assert.equal((await state()).running, true);
+  assert.ok((await state()).elapsed > paused.elapsed);
+  await page.setViewportSize({ width:2560, height:1440 });
+  await page.waitForTimeout(450);
+  const layout = await page.evaluate(() => {
+    const colony = window.testScene.emergence;
+    return { pixels:colony.canvas.width * colony.canvas.height, x:colony.ants[0].startX, word:colony.word.getBoundingClientRect().toJSON(), running:colony.running };
+  });
+  assert.ok(layout.pixels <= 2_000_000, 'large or high-DPI screens exceeded the canvas budget');
+  assert.ok(layout.x >= layout.word.left - 10 && layout.x <= layout.word.right + 10, 'resizing detached the ants from their word');
+  assert.equal(layout.running, true);
+  await page.emulateMedia({ reducedMotion:'reduce' });
+  await page.waitForFunction(() => !window.testScene.emergence.running);
+  assert.equal(await page.locator('.emergence-ink').evaluate(element => Number(getComputedStyle(element).opacity)), 1);
+  assert.equal(await page.locator('.emergence-colony').isVisible(), false);
+  await context.close();
+  const reduced = await open({ reducedMotion:'reduce' });
+  assert.equal(await reduced.page.locator('.emergence-colony').count(), 0, 'reduced motion should not allocate an ant canvas');
+  assert.equal(await reduced.page.locator('.emergence-ink').evaluate(element => Number(getComputedStyle(element).opacity)), 1);
+  await reduced.context.close();
+});
+
 test('native mobile swipes and reduced-motion scrolling keep working', async () => {
   const { context, page } = await open({ viewport:{ width:390, height:844 }, isMobile:true, hasTouch:true });
   const { stops } = await snapshot(page);

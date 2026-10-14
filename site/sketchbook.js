@@ -66,7 +66,7 @@ export function initializeSketchbook({ cover = true, connections = true } = {}) 
     identity.querySelector('.glyph').textContent = 'Shishir';
     identity.querySelector('.glyph').setAttribute('aria-label', 'Shishir');
     identity.querySelector('.byline').textContent = 'computational cognitive science';
-    hero.querySelector('.disciplines').innerHTML = 'neuroscience / AI / psychology<br><span>notes, models, experiments</span>';
+    hero.querySelector('.disciplines').textContent = 'neuroscience / cognitive science / math';
     const art = document.getElementById('notebook-art');
     art.hidden = false;
     art.innerHTML = `<div class="opening-page">
@@ -98,11 +98,12 @@ export function initializeSketchbook({ cover = true, connections = true } = {}) 
   document.querySelectorAll('.section-heading').forEach((heading, index) => {
     heading.querySelector('.section-number').textContent = `0${index + 1}`;
     heading.querySelector('.section-name').textContent = sectionNames[index];
-    heading.querySelector('.section-note').textContent = pageNotes[index];
+    const note = heading.querySelector('.section-note');
+    if (note) note.textContent = pageNotes[index];
   });
 
   const about = document.getElementById('about');
-  about.querySelector('.about-layout').innerHTML = `<div class="about-statement"><h2>Computation<br>→ cognition.</h2><p class="lead">I study the principles behind perception, learning, decision-making, and consciousness.</p><p>Computational models + behavioral experiments.<br>Neuroscience + AI + cognitive psychology.</p></div>${study(processSketch(), 'A model has to meet behavior somewhere.', 'about-process')}`;
+  about.querySelector('.about-layout').innerHTML = `<div class="about-statement"><h2>Mind, brain,<br>and models.</h2><p class="lead">I’m Shishir. I work on computational models of perception, learning, and memory.</p><p>My interests sit between neuroscience, cognitive science, and mathematics.</p></div>${study(processSketch(), 'Models connect mechanisms with behavior.', 'about-process')}`;
   about.querySelector('.about-layout').insertAdjacentHTML('afterend', `<div class="thinking-notes"><div><h3>Perception</h3><p>Inputs become representations.<br>What gets selected?</p><span>bottom-up ↔ top-down</span></div><div><h3>Learning</h3><p>The same input, changed parameters.<br>What changes in behavior?</p><span>prediction errors / adaptation</span></div><div><h3>Emergence</h3><p>Simple updates. Many interactions.<br>Which structures persist?</p><span>dynamics / information / networks</span></div></div>`);
   const specTitles = ['questions & methods', 'tools I work with'];
   about.querySelectorAll('.about-specifications h3').forEach((title, index) => title.textContent = specTitles[index]);
@@ -155,13 +156,11 @@ export function initializeSketchbook({ cover = true, connections = true } = {}) 
     project.querySelector('a').insertAdjacentHTML('beforebegin', `<p class="project-jot">${jots[index]}</p>`);
     project.querySelector('a').innerHTML = 'open the experiment <span aria-hidden="true">↗</span>';
   });
-  projects.insertAdjacentHTML('beforeend', `<div class="experiment-thread"><p><a href="#activation-functions">evolve a function</a> → <a href="#network-visualizer">watch a network</a> → <a href="#neural-compression">simplify a model</a></p><p><a href="#climbing">build an environment</a> → let an agent act → see what changes</p><span>different experiments, related questions.</span></div>`);
+  projects.insertAdjacentHTML('beforeend', '<div class="experiment-thread"><a href="https://github.com/ibixina" target="_blank" rel="noopener noreferrer">More projects on GitHub ↗</a></div>');
 
   const contact = document.getElementById('contact');
-  contact.querySelector('.contact-layout h2').innerHTML = 'Bring a question.';
-  contact.querySelector('.contact-layout p').textContent = 'Open to conversations and collaborations around AI, neuroscience, and cognitive science.';
-  contact.querySelector('.contact-layout > div:first-child').insertAdjacentHTML('beforeend', `<div class="contact-prompts"><span>a memory model?</span><span>a learning system?</span><span>an experiment to compare them?</span></div>${penMarks()}`);
-  contact.querySelector('.contact-links').insertAdjacentHTML('beforebegin', '<p class="contact-margin">a thought in the margin<br>can become a conversation. ↗</p>');
+  contact.querySelector('.contact-layout h2').textContent = 'Get in touch.';
+  contact.querySelector('.contact-layout p').textContent = 'For research, collaborations, or a conversation about cognition and computation.';
   contact.querySelectorAll('.contact-links a').forEach(link => {
     if (link.hasAttribute('download')) link.firstChild.textContent = link.textContent.includes('RESUME') ? 'resume.pdf ' : 'cv.pdf ';
   });

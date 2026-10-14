@@ -430,7 +430,8 @@ export class ThoughtScene {
     this.world.style.transform = `translateZ(${this.focal + this.camera}px)`;
     this.stage.dataset.cameraDepth = Math.round(this.camera);
     const index = clamp(Math.round((this.camera + this.focal) / (this.focal * 2.8)), 0, this.stops.length - 1);
-    if (index !== this.currentIndex) {
+    const entered = index !== this.currentIndex;
+    if (entered) {
       this.currentIndex = index;
       this.pager.hidden = index === 0;
       this.pageNumber.textContent = `${String(index + 1).padStart(2, '0')} / ${String(this.stops.length).padStart(2, '0')}`;
@@ -455,9 +456,13 @@ export class ThoughtScene {
       if (alpha !== stop.opacity) stop.page.style.opacity = stop.opacity = alpha;
       stop.page.dataset.depth = Math.round(depth);
     }
+    if (entered) this.stops[index].page.dispatchEvent(new Event('notebook-enter'));
     this.drawRoutes();
     if (this.motion.moving) this.frame = requestAnimationFrame(this.animate);
-    else this.lastTime = 0;
+    else {
+      this.lastTime = 0;
+      this.stage.dispatchEvent(new Event('notebook-rest'));
+    }
   }
 
   drawRoutes() {

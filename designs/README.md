@@ -22,7 +22,7 @@ Open `http://127.0.0.1:5173/designs/archive/comparison.html?design=axon` to insp
 
 Chapter links, deep links, native wheel/touch scrolling, keyboard focus, and research disclosures are supported. Resizing recalculates the scene and retains progress within the current spread. Reduced motion returns all the content to its normal document layout.
 
-The artwork includes loose, unshaded lateral, dorsal, and medial pen studies of the brain and delicate branching neurons. No people or faces appear in Thoughtspace. Probabilistic modeling shows a prior, likelihood, and analytically calculated Gaussian posterior. Latent spaces appear as representation neighborhoods and a folded conceptual manifold, with a small note in the original symbol alphabet. The wordmark decodes on entry, hover, and focus. Both earlier directions remain available.
+The artwork includes loose, unshaded lateral, dorsal, and medial pen studies of the brain and large branching neurons. No people or faces appear in Thoughtspace. Probabilistic modeling shows a prior, likelihood, and analytically calculated Gaussian posterior. The latent-space spread links a sampled 3D Swiss roll with its two intrinsic coordinates; path and rotation sliders reveal matching neighborhoods and projection effects. The wordmark decodes on entry, hover, and focus. Both earlier directions remain available.
 
 There are no third-party JavaScript dependencies, package installation, build steps, or hosted project services. The original site is preserved in Git history. These designs use the existing content, repository links, email address, and PDF files.
 

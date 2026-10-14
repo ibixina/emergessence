@@ -20,11 +20,16 @@
 [data-design="thoughtspace"] .thought-opening p { font-size:29px; line-height:1.1; margin:20px 0 0 6%; }
 [data-design="thoughtspace"] .thought-opening del { color:var(--muted); text-decoration-style:double; }
 [data-design="thoughtspace"] .thought-opening p>span { color:var(--accent); margin-left:14px; }
+[data-design="thoughtspace"] .emergence-word { display:inline-block; position:relative; white-space:nowrap; }
+[data-design="thoughtspace"] .emergence-corner { position:absolute; left:0; top:0; width:0; height:0; pointer-events:none; }
+[data-design="thoughtspace"] .emergence-corner-1 { left:100%; }
+[data-design="thoughtspace"] .emergence-corner-2 { top:100%; }
+.emergence-colony { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; contain:strict; }
 [data-design="thoughtspace"] .thought-cover-study { position:absolute; top:21%; right:4%; width:43%; transform:rotate(3deg); }
 [data-design="thoughtspace"] .thought-cover-study>span { display:block; font-size:36px; color:var(--accent); margin-left:17%; }
 [data-design="thoughtspace"] .thought-cover-study figcaption { font-size:25px; margin-left:10%; }
-[data-design="thoughtspace"] .thought-cover-neurons { position:relative; width:100%; margin-top:16px; transform:rotate(-2deg); }
-[data-design="thoughtspace"] .thought-cover-neurons .study-sketch { height:150px; }
+[data-design="thoughtspace"] .thought-cover-neurons { position:relative; width:112%; margin:12px 0 0 -4%; transform:rotate(-2deg); }
+[data-design="thoughtspace"] .thought-cover-neurons .study-sketch { height:auto; aspect-ratio:420/176; }
 [data-design="thoughtspace"] .thought-cover-neurons figcaption { font-size:23px; color:var(--accent); margin-left:8%; }
 [data-design="thoughtspace"] .thought-aside { position:absolute; right:10%; bottom:22%; font-size:27px; color:var(--accent); transform:rotate(5deg); }
 [data-design="thoughtspace"] .thought-aside svg { width:150px; display:block; margin-left:-70px; }
@@ -39,6 +44,8 @@
 [data-design="thoughtspace"] .primary-navigation { position:relative; top:auto; margin:0 auto; background:none; border-top:0; max-width:1120px; padding:11px 12px; }
 [data-design="thoughtspace"] .primary-navigation.is-stuck { border-bottom-color:transparent; }
 [data-design="thoughtspace"] .content { max-width:1220px; }
+[data-design="thoughtspace"] .about-layout { grid-template-columns:.95fr 1.5fr; gap:4%; }
+[data-design="thoughtspace"] .about-process .study-sketch { max-height:none; aspect-ratio:420/176; }
 [data-design="thoughtspace"] .portfolio-section { padding:52px 0 38px; margin:0; min-height:0; }
 [data-design="thoughtspace"] .portfolio-section::before, [data-design="thoughtspace"] .portfolio-section::after { content:none; }
 [data-design="thoughtspace"] .section-heading { margin-bottom:38px; }
@@ -66,17 +73,34 @@
 [data-design="thoughtspace"] .thought-bridge svg { position:absolute; bottom:3px; left:1%; width:230px; height:65px; overflow:visible; }
 [data-design="thoughtspace"] .thought-bridge path { fill:none; stroke:var(--accent); stroke-width:1; stroke-linecap:round; }
 [data-design="thoughtspace"] .site-footer { background:none; }
-[data-design="thoughtspace"] .cognitive-notes { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9%; margin:0; padding:26px 3% 8px; }
 [data-design="thoughtspace"] .cognitive-note { transform:rotate(-1.5deg); scroll-margin-top:25px; }
-[data-design="thoughtspace"] .cognitive-note:nth-child(2) { transform:rotate(1deg); margin-top:17px; }
 [data-design="thoughtspace"] .cognitive-note h3 { font:400 40px/1 var(--hand); }
 [data-design="thoughtspace"] .cognitive-note>p { margin:12px 0 0 6px; font-size:28px; color:var(--accent); }
 [data-design="thoughtspace"] .cognitive-note>span { display:block; font-size:26px; margin:12px 0 0 6%; }
+[data-design="thoughtspace"] .thought-probability .cognitive-note { display:grid; grid-template-columns:.9fr 1.2fr; column-gap:7%; align-items:start; }
+[data-design="thoughtspace"] .thought-probability .cognitive-note h3 { margin-top:28px; }
+[data-design="thoughtspace"] .thought-probability .working-study { grid-column:2; grid-row:1/4; }
+[data-design="thoughtspace"] .thought-latent .cognitive-note { transform:none; margin:0; }
+[data-design="thoughtspace"] .cognitive-note .latent-description { max-width:84ch; color:var(--ink); font-size:26px; margin:18px 0 0; }
+[data-design="thoughtspace"] .latent-study { margin:14px 0 0; }
+[data-design="thoughtspace"] .latent-views { display:grid; grid-template-columns:460fr 350fr; gap:4%; max-width:900px; margin:0 auto; }
+[data-design="thoughtspace"] .latent-plot { aspect-ratio:auto; height:auto; }
+[data-design="thoughtspace"] .latent-plot text { font-size:25px; }
+[data-design="thoughtspace"] .latent-plot .latent-annotation { font-size:21px; fill:var(--muted); }
+[data-design="thoughtspace"] .latent-plot .latent-grid { stroke:var(--rule); stroke-width:.6; }
+[data-design="thoughtspace"] .latent-plot .latent-axes { stroke:var(--muted); stroke-width:1; }
+[data-design="thoughtspace"] .latent-plot .latent-guides { stroke:var(--accent); stroke-width:1; stroke-dasharray:3 4; opacity:.65; }
+[data-design="thoughtspace"] .latent-controls { display:flex; flex-wrap:wrap; gap:12px 6%; margin:4px 0 18px; }
+[data-design="thoughtspace"] .latent-controls label { display:grid; grid-template-columns:auto minmax(90px,1fr) auto; align-items:center; gap:12px; flex:1 1 350px; font-size:24px; color:var(--accent); }
+[data-design="thoughtspace"] .latent-controls input { min-width:0; width:100%; min-height:44px; margin:0; accent-color:var(--accent); cursor:pointer; }
+[data-design="thoughtspace"] .latent-controls input:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:3px; }
+[data-design="thoughtspace"] .latent-controls output { min-width:5ch; white-space:nowrap; font-size:22px; color:var(--ink); }
+[data-design="thoughtspace"] .latent-controls .latent-position-value { min-width:14ch; }
+[data-design="thoughtspace"] .latent-study figcaption { max-width:78ch; margin:0; transform:none; font-size:24px; line-height:1.15; }
+[data-design="thoughtspace"] .cognitive-note .latent-footnote { margin:20px 0 0; font-size:23px; color:var(--muted); max-width:80ch; }
 [data-design="thoughtspace"] .method-brain { margin:6px 0; }
 [data-design="thoughtspace"] .method-brain .study-sketch { max-height:155px; }
 [data-design="thoughtspace"] .method-brain figcaption { font-size:23px; color:var(--accent); }
-[data-design="thoughtspace"] .cognitive-note .representation-jot { display:flex; gap:20px; align-items:center; margin-top:30px; font-size:25px; }
-[data-design="thoughtspace"] .symbol-alphabet { font:400 18px var(--mono); letter-spacing:.08em; }
 [data-design="thoughtspace"] .scientific-study { mix-blend-mode:multiply; }
 [data-design="thoughtspace"] .scientific-study image { opacity:0; }
 [data-design="thoughtspace"][data-cognitive-art] .scientific-study image { opacity:.94; }
@@ -109,8 +133,14 @@
   [data-design="thoughtspace"] .portfolio-section { padding:35px 3px 20px; }
   [data-design="thoughtspace"] .thought-stop { perspective-origin:50% 100px; margin-bottom:40px; }
   [data-design="thoughtspace"] .thought-cluster { transform-origin:50% 100px; }
-  [data-design="thoughtspace"] .thought-pair, [data-design="thoughtspace"] .cognitive-notes { grid-template-columns:minmax(0,1fr); gap:38px; }
-  [data-design="thoughtspace"] .thought-pair>.notebook-connections, [data-design="thoughtspace"] .cognitive-notes>.notebook-connections { display:none; }
+  [data-design="thoughtspace"] .thought-pair { grid-template-columns:minmax(0,1fr); gap:38px; }
+  [data-design="thoughtspace"] .about-layout, [data-design="thoughtspace"] .thought-probability .cognitive-note { grid-template-columns:minmax(0,1fr); }
+  [data-design="thoughtspace"] .thought-probability .working-study { grid-column:auto; grid-row:auto; }
+  [data-design="thoughtspace"] .latent-views { grid-template-columns:minmax(0,1fr); gap:12px; }
+  [data-design="thoughtspace"] .latent-coordinates { width:85%; justify-self:center; }
+  [data-design="thoughtspace"] .latent-controls label { grid-template-columns:1fr auto; gap:2px 12px; font-size:25px; }
+  [data-design="thoughtspace"] .latent-controls input { grid-row:2; grid-column:1/-1; }
+  [data-design="thoughtspace"] .latent-controls output { text-align:right; }
   [data-design="thoughtspace"] .research-entry { padding:0; }
   [data-design="thoughtspace"] .research-crossnotes { padding:0; }
   [data-design="thoughtspace"] .research-entry h2 { font-size:39px; }
@@ -122,8 +152,6 @@
   [data-design="thoughtspace"] .thought-bridge { padding:10px 0 66px 3%; }
   [data-design="thoughtspace"] .thought-bridge p { font-size:35px; }
   [data-design="thoughtspace"] .thought-bridge span { font-size:25px; margin-left:7px; }
-  [data-design="thoughtspace"] .cognitive-notes { padding:17px 2px; }
-  [data-design="thoughtspace"] .cognitive-note:nth-child(2) { margin-top:0; }
   [data-design="thoughtspace"] .cognitive-note h3 { font-size:37px; }
 }
 @media(max-width:380px) {
@@ -155,7 +183,6 @@
 [data-design="thoughtspace"] .thought-plane-cover { min-height:660px; }
 @media(max-height:760px) and (min-width:701px) {
   [data-design="thoughtspace"] .thought-opening h2 { font-size:68px; }
-  [data-design="thoughtspace"] .thought-cover-neurons .study-sketch { height:120px; }
 }
 @media(max-width:700px) {
   .journey-pager { right:16px; bottom:max(12px,env(safe-area-inset-bottom)); }
