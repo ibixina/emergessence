@@ -47,6 +47,8 @@ export class ThoughtScene {
     this.snapTimer = 0;
     this.snapTarget = null;
     this.scrollBounds = null;
+    this.wheelTimer = 0;
+    this.wheelDirection = 0;
     this.pointerDown = false;
     this.touching = false;
     this.lastScroll = scrollY;
@@ -257,7 +259,7 @@ export class ThoughtScene {
       stop.top = stop.cover ? 0 : Math.max(45, (this.height - stop.height) / 2);
       stop.overflow = stop.cover ? 0 : Math.max(0, stop.top + stop.height - this.height + 90);
       stop.entrance = stop.cover ? 0 : this.height * .68;
-      stop.reading = stop.cover ? 0 : stop.overflow + this.height * .28;
+      stop.reading = stop.overflow;
       stop.departure = index === this.stops.length - 1 ? 0 : this.height * .72;
       stop.duration = stop.entrance + stop.reading + stop.departure;
       stop.transform = null;
@@ -266,7 +268,7 @@ export class ThoughtScene {
       stop.source.style.height = `${stop.duration}px`;
     });
     const last = this.stops.at(-1);
-    last.source.style.height = `${last.entrance + last.reading + innerHeight - this.height * .28}px`;
+    last.source.style.height = `${last.entrance + last.reading + innerHeight}px`;
     this.stops.forEach(stop => { stop.start = stop.cover ? 0 : stop.source.getBoundingClientRect().top + scrollY; });
     const transform = this.world.style.transform;
     this.world.style.transform = 'translateZ(0px)';
@@ -329,7 +331,12 @@ export class ThoughtScene {
   cancelSnap(resetGesture = true) {
     clearTimeout(this.snapTimer);
     this.snapTimer = 0;
-    if (resetGesture) this.scrollBounds = null;
+    if (resetGesture) {
+      clearTimeout(this.wheelTimer);
+      this.wheelTimer = 0;
+      this.wheelDirection = 0;
+      this.scrollBounds = null;
+    }
     if (this.snapTarget !== null || this.navigationTarget) {
       this.snapTarget = null;
       this.navigationTarget = null;
@@ -340,13 +347,31 @@ export class ThoughtScene {
   onWheel(event) {
     if (!this.enabled || event.defaultPrevented || event.ctrlKey || !event.deltaY) return;
     event.preventDefault();
-    this.cancelSnap(false);
-    // Keep the same bounds through the gesture's momentum tail.
-    this.scrollBounds ??= scrollGestureBounds(this.stops, scrollY);
+    const direction = Math.sign(event.deltaY);
+    if (!this.wheelDirection) {
+      this.cancelSnap();
+      this.scrollBounds = scrollGestureBounds(this.stops, scrollY);
+    } else if (direction !== this.wheelDirection) this.cancelSnap(false);
+    this.wheelDirection = direction;
+    clearTimeout(this.wheelTimer);
+    this.wheelTimer = setTimeout(() => {
+      this.wheelTimer = 0;
+      this.wheelDirection = 0;
+      this.scrollBounds = null;
+      if (this.snapTarget !== null) this.scheduleSnap();
+      else this.settle();
+    }, 240);
+    // Momentum continues the existing turn instead of stopping its animation.
+    if (this.snapTarget !== null) return;
+    this.scrollDirection = direction;
     const unit = event.deltaMode === 1 ? 32 : event.deltaMode === 2 ? this.height : 1;
-    const top = clamp(scrollY + event.deltaY * unit, this.scrollBounds.min, this.scrollBounds.max);
-    window.scrollTo({ top, behavior:'instant' });
-    this.scheduleSnap();
+    const offset = clamp(scrollY + event.deltaY * unit, this.scrollBounds.min, this.scrollBounds.max);
+    const top = settledScrollPosition(this.stops, offset, direction, clamp(this.height * .08, 40, 80));
+    const atEdge = offset === this.scrollBounds.min || offset === this.scrollBounds.max;
+    if (direction * (top - scrollY) > 0 && (Math.abs(top - offset) >= 1 || atEdge)) {
+      this.snapTarget = top;
+      window.scrollTo({ top, behavior:'smooth' });
+    } else window.scrollTo({ top:offset, behavior:'instant' });
   }
 
   onScroll() {
@@ -363,7 +388,7 @@ export class ThoughtScene {
 
   scheduleSnap() {
     clearTimeout(this.snapTimer);
-    if (!this.enabled || this.pointerDown || this.touching || document.hidden) return;
+    if (!this.enabled || this.pointerDown || this.touching || this.wheelDirection || document.hidden) return;
     this.snapTimer = setTimeout(() => this.settle(), this.scrollBounds ? 240 : 160);
   }
 

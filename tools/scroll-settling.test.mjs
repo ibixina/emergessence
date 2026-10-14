@@ -80,9 +80,12 @@ function wheelScene(t, offset = 0) {
   globalThis.scrollY = offset;
   const scene = Object.assign(Object.create(ThoughtScene.prototype), {
     stops, height:800, enabled:true, snapTimer:0, snapTarget:null, navigationTarget:null,
-    scrollBounds:null, lastScroll:offset, scrollDirection:0, refresh() {}
+    scrollBounds:null, wheelDirection:0, wheelTimer:0, lastScroll:offset, scrollDirection:0, refresh() {}
   });
-  globalThis.window = { scrollTo({ top }) {
+  const calls = [];
+  globalThis.window = { scrollTo(options) {
+    calls.push(options);
+    const { top } = options;
     const changed = globalThis.scrollY !== top;
     globalThis.scrollY = top;
     if (changed) scene.onScroll();
@@ -92,8 +95,43 @@ function wheelScene(t, offset = 0) {
     scene.onWheel({ deltaY, deltaMode:0, preventDefault() { prevented = true; }, ...options });
     return prevented;
   };
-  return { scene, wheel };
+  return { scene, wheel, calls };
 }
+
+for (const delta of [100, 5000]) {
+  test(`a ${delta}px flick starts easing to the next page immediately`, t => {
+    const { scene, wheel, calls } = wheelScene(t);
+    wheel(delta);
+    assert.equal(scene.snapTarget, 1500);
+    assert.deepEqual(calls, [{ top:1500, behavior:'smooth' }]);
+  });
+}
+
+test('momentum never cancels or restarts the page-turn animation', t => {
+  const { scene, wheel, calls } = wheelScene(t);
+  wheel(100);
+  // Model an animation still traveling when its momentum events arrive.
+  globalThis.scrollY = 500;
+  for (const delta of [80, 60, 40, 20, 5]) {
+    t.mock.timers.tick(100);
+    wheel(delta);
+  }
+  assert.equal(scene.snapTarget, 1500);
+  assert.deepEqual(calls, [{ top:1500, behavior:'smooth' }]);
+});
+
+test('reversing the gesture interrupts the turn and eases back', t => {
+  const { scene, wheel, calls } = wheelScene(t);
+  wheel(100);
+  globalThis.scrollY = 500;
+  wheel(-100);
+  assert.equal(scene.snapTarget, 0);
+  assert.deepEqual(calls, [
+    { top:1500, behavior:'smooth' },
+    { top:500, behavior:'instant' },
+    { top:0, behavior:'smooth' }
+  ]);
+});
 
 test('large wheel bursts and momentum advance only one page per gesture', t => {
   const { wheel } = wheelScene(t);

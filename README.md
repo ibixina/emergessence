@@ -14,7 +14,7 @@ Open `http://127.0.0.1:5173/`. No build step or package installation is required
 
 The main site has one design and no comparison toolbar. Old `/designs/` links redirect to the main site and preserve their section anchors. Historical prototypes, artwork provenance, and screenshots remain in `designs/`; the former comparison page is archived at `designs/archive/comparison.html`.
 
-Each wheel, trackpad, or touch gesture travels at most one spread, then settles into its reading position. Taller spreads scroll through their contents before another gesture can leave the page, and the page counter provides previous/next controls. Chapter links, research disclosures, keyboard focus, mobile scrolling, and direct section links remain functional. Reduced motion restores a normal scrolling notebook layout. Artwork and font provenance are documented in `designs/art-direction.md` and `site/assets/fonts/README.md`.
+Each wheel, trackpad, or touch gesture travels at most one spread. Deliberate wheel and trackpad scrolling immediately eases into the adjacent spread, with momentum continuing the same turn. Taller spreads scroll through their contents before another gesture can leave the page, and the page counter provides previous/next controls. Chapter links, research disclosures, keyboard focus, mobile scrolling, and direct section links remain functional. Reduced motion restores a normal scrolling notebook layout. Artwork and font provenance are documented in `designs/art-direction.md` and `site/assets/fonts/README.md`.
 
 Run `node --test tools/scroll-settling.test.mjs` to check page settling and tall-page reading boundaries.
 
