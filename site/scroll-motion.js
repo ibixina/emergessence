@@ -6,19 +6,15 @@ export function settledScrollPosition(stops, offset, direction = 0) {
     const start = stop.start + stop.entrance;
     const end = start + stop.overflow;
     if (offset < start) {
-      if (direction > 0) return start;
-      if (direction < 0) return previousEnd;
-      return offset - previousEnd < start - offset ? previousEnd : start;
+      const previousDistance = offset - previousEnd;
+      const nextDistance = start - offset;
+      if (previousDistance === nextDistance) return direction < 0 ? previousEnd : start;
+      return previousDistance < nextDistance ? previousEnd : start;
     }
     if (offset <= end) return offset;
     previousEnd = end;
   }
   return previousEnd;
-}
-
-export function pulledScrollPosition(stops, offset, direction, reach) {
-  const target = settledScrollPosition(stops, offset, direction);
-  return Math.abs(target - offset) <= reach ? target : offset;
 }
 
 export function scrollGestureBounds(stops, offset) {

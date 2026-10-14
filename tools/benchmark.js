@@ -1,5 +1,5 @@
 // Match the initializer's module URL to instrument its shared constructor.
-import { ThoughtScene } from '../site/thought-scene.js?v=19';
+import { ThoughtScene } from '../site/thought-scene.js?v=20';
 
 let recording = null;
 let inAnimation = false;

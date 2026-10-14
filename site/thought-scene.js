@@ -1,4 +1,4 @@
-import { ScrollGesture, ScrollMotion, scrollGestureBounds, pulledScrollPosition } from './scroll-motion.js?v=2';
+import { ScrollGesture, ScrollMotion, scrollGestureBounds, settledScrollPosition } from './scroll-motion.js?v=3';
 
 const clamp = (value, low = 0, high = 1) => Math.min(high, Math.max(low, value));
 function smooth(low, high, value) {
@@ -144,7 +144,10 @@ export class ThoughtScene {
         cancelAnimationFrame(this.frame);
         this.frame = 0;
         this.lastTime = 0;
-      } else this.refresh();
+      } else {
+        this.refresh();
+        this.scheduleSnap();
+      }
     });
     this.observer = new ResizeObserver(entries => {
       if (entries.some(entry => {
@@ -281,6 +284,7 @@ export class ThoughtScene {
     }
     this.camera = null;
     this.refresh();
+    this.scheduleSnap();
   }
 
   navigate(hash, behavior = 'instant') {
@@ -375,7 +379,7 @@ export class ThoughtScene {
   scheduleSnap() {
     clearTimeout(this.snapTimer);
     if (!this.enabled || this.pointerDown || this.touching || document.hidden || this.navigationTarget) return;
-    this.snapTimer = setTimeout(() => this.settle(), 80);
+    this.snapTimer = setTimeout(() => this.settle(), 160);
   }
 
   settle() {
@@ -384,7 +388,7 @@ export class ThoughtScene {
     if (!this.enabled || this.pointerDown || this.touching || document.hidden || this.navigationTarget) return;
     if (this.resizeFrame) this.resize();
     const offset = this.wheelGesture ? this.wheelGesture.offset : this.motion.position;
-    this.motion.target = pulledScrollPosition(this.stops, offset, this.scrollDirection, this.height * .5);
+    this.motion.target = settledScrollPosition(this.stops, offset, this.scrollDirection);
     this.pulling = this.motion.target !== offset;
     this.refresh();
   }

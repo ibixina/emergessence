@@ -87,23 +87,47 @@ async function trace(page) {
   });
 }
 
-test('small scrolls move the drawings proportionally and keep their progress on page 03', async () => {
-  const { context, page } = await open({ viewport:{ width:1908, height:1064 } });
+test('small scrolls give visible feedback in both directions, then restore full reading scale', async () => {
+  const { context, page } = await open({ viewport:{ width:1823, height:1033 } });
   await navigate(page, 2);
   const initial = await snapshot(page);
-  await trace(page);
-  await page.mouse.wheel(0, 20);
-  await page.waitForTimeout(1100);
-  const frames = await page.evaluate(() => window.motionFrames);
-  const firstMovement = frames.find(frame => Math.abs(frame.width - frames[0].width) > 1);
-  assert.ok(firstMovement, 'the rendered drawings did not follow the scroll');
-  assert.ok(firstMovement.time < 100, `visual response took ${firstMovement.time}ms`);
-  close((await snapshot(page)).offset, initial.offset + 20);
-  assert.equal((await snapshot(page)).index, 2);
-  await page.mouse.wheel(0, 20);
-  await page.waitForTimeout(1100);
-  close((await snapshot(page)).offset, initial.offset + 40);
-  assert.equal((await snapshot(page)).index, 2);
+  const readingWidth = await page.evaluate(() => window.testScene.active.page.getBoundingClientRect().width);
+  for (const direction of [1, -1]) {
+    await trace(page);
+    await page.mouse.wheel(0, 20 * direction);
+    await page.waitForTimeout(1200);
+    const frames = await page.evaluate(() => window.motionFrames);
+    const firstMovement = frames.find(frame => Math.abs(frame.width - frames[0].width) > 1);
+    assert.ok(firstMovement, 'the rendered drawings did not follow the scroll');
+    assert.ok(firstMovement.time < 100, `visual response took ${firstMovement.time}ms`);
+    assert.ok(frames.some(frame => direction * (frame.offset - initial.offset) > 1));
+    close((await snapshot(page)).offset, initial.offset);
+    assert.equal((await snapshot(page)).index, 2);
+    const width = await page.evaluate(() => window.testScene.active.page.getBoundingClientRect().width);
+    assert.ok(Math.abs(width - readingWidth) < .1, 'the page remained scaled down after release');
+  }
+  await context.close();
+});
+
+test('stopping anywhere in a transition returns to a full-size page instead of floating', async () => {
+  const { context, page } = await open({ viewport:{ width:1823, height:1033 } });
+  const { stops } = await snapshot(page);
+  for (const fraction of [.1, .35, .49, .51, .65, .9]) {
+    await navigate(page, 0);
+    await page.mouse.wheel(0, stops[1].start * fraction);
+    await page.waitForTimeout(1200);
+    const expectedIndex = fraction < .5 ? 0 : 1;
+    close((await snapshot(page)).offset, stops[expectedIndex].start);
+    assert.equal((await snapshot(page)).index, expectedIndex);
+    const scale = await page.evaluate(() => {
+      const scene = window.testScene;
+      return scene.active.page.getBoundingClientRect().width / scene.active.width;
+    });
+    assert.ok(Math.abs(scale - 1) < .001, `the page rested at scale ${scale}`);
+    if (fraction === .65 && process.env.SCROLL_PREVIEW_PATH) {
+      await page.screenshot({ path:process.env.SCROLL_PREVIEW_PATH });
+    }
+  }
   await context.close();
 });
 

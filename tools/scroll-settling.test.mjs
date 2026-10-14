@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ScrollGesture, ScrollMotion, scrollGestureBounds, settledScrollPosition, pulledScrollPosition } from '../site/scroll-motion.js';
+import { ScrollGesture, ScrollMotion, scrollGestureBounds, settledScrollPosition } from '../site/scroll-motion.js';
 import { ThoughtScene } from '../site/thought-scene.js';
 
 const stops = [
@@ -15,9 +15,9 @@ function finish(motion, frame = () => motion.step(1 / 60)) {
   assert.equal(motion.moving, false, 'the motion must come to rest');
 }
 
-test('reading anchors respect direction and restored positions choose the closest page', () => {
-  assert.equal(settledScrollPosition(stops, .25, 1), 1500);
-  assert.equal(settledScrollPosition(stops, 1499.75, -1), 0);
+test('reading anchors attract nearby deviations independently of scroll direction', () => {
+  assert.equal(settledScrollPosition(stops, .25, 1), 0);
+  assert.equal(settledScrollPosition(stops, 1499.75, -1), 1500);
   assert.equal(settledScrollPosition(stops, 700), 0);
   assert.equal(settledScrollPosition(stops, 800), 1500);
   assert.equal(settledScrollPosition(stops, -20, -1), 0);
@@ -165,25 +165,57 @@ function sceneFixture(t, offset = 0) {
   return { scene, wheel, frame, writes };
 }
 
-test('the pull captures approaching pages and preserves progress away from them', () => {
-  assert.equal(pulledScrollPosition(stops, 50, 1, 400), 50);
-  assert.equal(pulledScrollPosition(stops, 1000, 1, 400), 1000);
-  assert.equal(pulledScrollPosition(stops, 1300, 1, 400), 1500);
-  assert.equal(pulledScrollPosition(stops, 1490, -1, 400), 1490);
-  assert.equal(pulledScrollPosition(stops, 1800, -1, 400), 1500);
-  assert.equal(pulledScrollPosition(stops, 3500, 1, 400), 3500);
+test('every offset between pages belongs to a reading position, with no neutral gap', () => {
+  for (let index = 1; index < stops.length; index++) {
+    const previousEnd = stops[index - 1].start + stops[index - 1].entrance + stops[index - 1].overflow;
+    const nextStart = stops[index].start + stops[index].entrance;
+    for (let offset = previousEnd + 1; offset < nextStart; offset++) {
+      for (const direction of [-1, 0, 1]) {
+        const target = settledScrollPosition(stops, offset, direction);
+        assert.ok(target === previousEnd || target === nextStart, `unreadable resting position at ${offset}`);
+        if (offset < (previousEnd + nextStart) / 2) assert.equal(target, previousEnd);
+        if (offset > (previousEnd + nextStart) / 2) assert.equal(target, nextStart);
+      }
+    }
+  }
 });
 
-test('small gestures retain their progress instead of turning a page or snapping back', t => {
+test('the midpoint separates page basins and never becomes a resting position', () => {
+  assert.equal(settledScrollPosition(stops, 750, 1), 1500);
+  assert.equal(settledScrollPosition(stops, 750, -1), 0);
+  assert.equal(settledScrollPosition(stops, 750), 1500);
+  assert.equal(settledScrollPosition(stops, 50, 1), 0);
+  assert.equal(settledScrollPosition(stops, 1490, -1), 1500);
+  assert.equal(settledScrollPosition(stops, 3500, 1), 3500);
+});
+
+test('small scrolls move immediately, then return to the full-size page when released', t => {
+  const { scene, wheel, frame } = sceneFixture(t, 1500);
+  for (const direction of [1, -1]) {
+    wheel(20 * direction);
+    assert.equal(scene.motion.target, 1500 + 20 * direction);
+    for (let i = 0; i < 6; i++) frame();
+    assert.ok(direction * (scene.motion.position - 1500) > 1);
+    t.mock.timers.tick(240);
+    assert.equal(scene.motion.target, 1500);
+    finish(scene.motion, frame);
+    assert.equal(scene.motion.position, 1500);
+  }
+});
+
+test('regular wheel input stays proportional until the gesture ends', t => {
   const { scene, wheel, frame } = sceneFixture(t);
-  wheel(20);
-  t.mock.timers.tick(240);
+  for (let i = 1; i <= 8; i++) {
+    wheel(100);
+    assert.equal(scene.motion.target, i * 100);
+    for (let f = 0; f < 6; f++) frame();
+    t.mock.timers.tick(100);
+    assert.equal(scene.pulling, false);
+  }
+  t.mock.timers.tick(160);
+  assert.equal(scene.motion.target, 1500);
   finish(scene.motion, frame);
-  assert.equal(scene.motion.position, 20);
-  wheel(20);
-  t.mock.timers.tick(240);
-  finish(scene.motion, frame);
-  assert.equal(scene.motion.position, 40);
+  assert.equal(scene.motion.position, 1500);
 });
 
 test('the pull continues a nearby approach without stopping its velocity', t => {
@@ -192,7 +224,7 @@ test('the pull continues a nearby approach without stopping its velocity', t => 
   assert.equal(scene.motion.target, 1300);
   for (let i = 0; i < 3; i++) frame();
   const velocity = scene.motion.velocity;
-  t.mock.timers.tick(80);
+  t.mock.timers.tick(160);
   assert.equal(scene.motion.target, 1500);
   assert.equal(scene.motion.velocity, velocity);
   finish(scene.motion, frame);
@@ -203,7 +235,7 @@ test('resumed input takes control at the current view instead of continuing the 
   const { scene, wheel, frame } = sceneFixture(t);
   wheel(1300);
   for (let i = 0; i < 3; i++) frame();
-  t.mock.timers.tick(80);
+  t.mock.timers.tick(160);
   assert.equal(scene.pulling, true);
   const position = scene.motion.position;
   wheel(20);
