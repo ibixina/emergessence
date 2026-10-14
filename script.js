@@ -1,4 +1,4 @@
-import { initializeThoughtspace } from './site/thoughtspace.js?v=7';
+import { initializeThoughtspace } from './site/thoughtspace.js?v=8';
 
 const benchmark = new URLSearchParams(location.search).has('benchmark')
   ? await import('./tools/benchmark.js') : null;

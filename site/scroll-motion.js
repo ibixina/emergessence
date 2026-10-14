@@ -16,6 +16,11 @@ export function settledScrollPosition(stops, offset, direction = 0) {
   return previousEnd;
 }
 
+export function pulledScrollPosition(stops, offset, direction, reach) {
+  const target = settledScrollPosition(stops, offset, direction);
+  return Math.abs(target - offset) <= reach ? target : offset;
+}
+
 export function scrollGestureBounds(stops, offset) {
   const position = settledScrollPosition(stops, offset);
   const index = stops.findIndex(stop => position >= stop.start + stop.entrance && position <= stop.start + stop.entrance + stop.overflow);
@@ -34,7 +39,7 @@ export function scrollGestureBounds(stops, offset) {
 export class ScrollGesture {
   constructor(stops, offset) {
     Object.assign(this, scrollGestureBounds(stops, offset));
-    this.offset = clamp(offset, this.start, this.end);
+    this.offset = clamp(offset, this.min, this.max);
     this.direction = 0;
   }
 
@@ -44,8 +49,6 @@ export class ScrollGesture {
     if (this.direction && this.direction !== direction) this.offset = position;
     this.direction = direction;
     this.offset = clamp(this.offset + delta, this.min, this.max);
-    if (this.offset < this.start) return direction < 0 ? this.min : this.start;
-    if (this.offset > this.end) return direction > 0 ? this.max : this.end;
     return this.offset;
   }
 }

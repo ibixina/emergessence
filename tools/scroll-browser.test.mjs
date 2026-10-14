@@ -87,18 +87,23 @@ async function trace(page) {
   });
 }
 
-test('a fractional scroll moves the rendered page on the next frame and reaches its neighbor', async () => {
-  const { context, page } = await open();
+test('small scrolls move the drawings proportionally and keep their progress on page 03', async () => {
+  const { context, page } = await open({ viewport:{ width:1908, height:1064 } });
+  await navigate(page, 2);
   const initial = await snapshot(page);
   await trace(page);
-  await page.mouse.wheel(0, .25);
-  await page.waitForTimeout(1200);
+  await page.mouse.wheel(0, 20);
+  await page.waitForTimeout(1100);
   const frames = await page.evaluate(() => window.motionFrames);
   const firstMovement = frames.find(frame => Math.abs(frame.width - frames[0].width) > 1);
-  assert.ok(firstMovement, 'the rendered page never responded to a fractional scroll');
+  assert.ok(firstMovement, 'the rendered drawings did not follow the scroll');
   assert.ok(firstMovement.time < 100, `visual response took ${firstMovement.time}ms`);
-  close((await snapshot(page)).offset, initial.stops[1].start);
-  assert.equal((await snapshot(page)).index, 1);
+  close((await snapshot(page)).offset, initial.offset + 20);
+  assert.equal((await snapshot(page)).index, 2);
+  await page.mouse.wheel(0, 20);
+  await page.waitForTimeout(1100);
+  close((await snapshot(page)).offset, initial.offset + 40);
+  assert.equal((await snapshot(page)).index, 2);
   await context.close();
 });
 
@@ -139,25 +144,31 @@ test('quick flings remain one continuous page transition', async () => {
   await context.close();
 });
 
-test('a new small gesture responds while the prior page turn is still settling', async () => {
+test('approaching a page coasts into its reading position with a continuous pull', async () => {
   const { context, page } = await open();
   const { stops } = await snapshot(page);
-  await page.mouse.wheel(0, .25);
-  await page.waitForTimeout(300);
-  await page.mouse.wheel(0, .25);
-  await page.waitForTimeout(1100);
-  close((await snapshot(page)).offset, stops[2].start);
-  assert.equal((await snapshot(page)).index, 2);
+  await navigate(page, 2);
+  await trace(page);
+  const destination = stops[3].start;
+  await page.mouse.wheel(0, destination - stops[2].start - 250);
+  await page.waitForTimeout(1200);
+  close((await snapshot(page)).offset, destination);
+  assert.equal((await snapshot(page)).index, 3);
+  const frames = await page.evaluate(() => window.motionFrames);
+  const moving = frames.filter((frame, index) => index && Math.abs(frame.camera - frames[index - 1].camera) > .1);
+  const gaps = moving.slice(1).map((frame, index) => frame.time - moving[index].time);
+  assert.ok(Math.max(...gaps) < 100, 'the pull introduced a stop before alignment');
+  assert.ok(frames.every((frame, index) => !index || frame.camera >= frames[index - 1].camera - .1));
   await context.close();
 });
 
 test('reversal interrupts the transition and returns smoothly to the original page', async () => {
   const { context, page } = await open();
-  await page.mouse.wheel(0, .25);
+  await page.mouse.wheel(0, 500);
   await page.waitForTimeout(100);
   const forward = (await snapshot(page)).offset;
   assert.ok(forward > 100);
-  await page.mouse.wheel(0, -.25);
+  await page.mouse.wheel(0, -500);
   await page.waitForTimeout(100);
   assert.ok((await snapshot(page)).offset < forward);
   await page.waitForTimeout(1000);
@@ -165,11 +176,11 @@ test('reversal interrupts the transition and returns smoothly to the original pa
   await context.close();
 });
 
-test('small backward input, tall reading boundaries, and page controls remain functional', async () => {
+test('backward flings, tall reading boundaries, and page controls remain functional', async () => {
   const { context, page } = await open();
   const { stops } = await snapshot(page);
   await navigate(page, 2);
-  await page.mouse.wheel(0, -.25);
+  await page.mouse.wheel(0, -5000);
   await page.waitForTimeout(1100);
   close((await snapshot(page)).offset, stops[1].end);
   const tallIndex = stops.findIndex(stop => stop.end - stop.start > 60);
@@ -178,7 +189,7 @@ test('small backward input, tall reading boundaries, and page controls remain fu
   await page.waitForTimeout(1100);
   close((await snapshot(page)).offset, stops[tallIndex].end);
   assert.equal((await snapshot(page)).index, tallIndex);
-  await page.mouse.wheel(0, .25);
+  await page.mouse.wheel(0, 5000);
   await page.waitForTimeout(1100);
   close((await snapshot(page)).offset, stops[tallIndex + 1].start);
   await page.locator('.journey-next').click();

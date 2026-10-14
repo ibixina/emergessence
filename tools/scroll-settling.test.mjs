@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ScrollGesture, ScrollMotion, scrollGestureBounds, settledScrollPosition } from '../site/scroll-motion.js';
+import { ScrollGesture, ScrollMotion, scrollGestureBounds, settledScrollPosition, pulledScrollPosition } from '../site/scroll-motion.js';
 import { ThoughtScene } from '../site/thought-scene.js';
 
 const stops = [
@@ -15,7 +15,7 @@ function finish(motion, frame = () => motion.step(1 / 60)) {
   assert.equal(motion.moving, false, 'the motion must come to rest');
 }
 
-test('native scrolls settle in their direction, and restored positions choose the closest page', () => {
+test('reading anchors respect direction and restored positions choose the closest page', () => {
   assert.equal(settledScrollPosition(stops, .25, 1), 1500);
   assert.equal(settledScrollPosition(stops, 1499.75, -1), 0);
   assert.equal(settledScrollPosition(stops, 700), 0);
@@ -31,17 +31,18 @@ test('tall pages retain every reading position', () => {
 });
 
 for (const delta of [.01, .25, 1, 10, 100, 5000]) {
-  test(`a ${delta}px input starts a bounded page turn on the first frame`, () => {
+  test(`a ${delta}px input moves proportionally within its gesture bounds`, () => {
     for (const [offset, direction, destination] of [[0, 1, 1500], [1500, -1, 0]]) {
       const gesture = new ScrollGesture(stops, offset);
       const motion = new ScrollMotion(offset);
       motion.target = gesture.move(delta * direction, motion.position);
-      assert.equal(motion.target, destination);
+      const expected = offset + direction * Math.min(delta, 1500);
+      assert.equal(motion.target, expected);
       motion.step(1 / 60);
-      assert.ok(direction * (motion.position - offset) > 1);
+      assert.ok(direction * (motion.position - offset) > 0);
       assert.ok(direction * (destination - motion.position) > 0);
       finish(motion);
-      assert.equal(motion.position, destination);
+      assert.equal(motion.position, expected);
     }
   });
 }
@@ -86,7 +87,7 @@ test('a tall page finishes reading before another gesture can leave it', () => {
   for (let i = 0; i < 10; i++) motion.target = gesture.move(5000, motion.position);
   finish(motion);
   assert.equal(motion.position, 4200);
-  motion.target = new ScrollGesture(stops, motion.position).move(.25, motion.position);
+  motion.target = new ScrollGesture(stops, motion.position).move(5000, motion.position);
   finish(motion);
   assert.equal(motion.position, 6000);
 });
@@ -104,10 +105,10 @@ test('backward flings stop at the previous page bottom, then read back through i
 test('reversing input changes direction without throwing away the current velocity', () => {
   const gesture = new ScrollGesture(stops, 0);
   const motion = new ScrollMotion(0);
-  motion.target = gesture.move(.25, motion.position);
+  motion.target = gesture.move(500, motion.position);
   motion.step(.1);
   const velocity = motion.velocity;
-  motion.target = gesture.move(-.25, motion.position);
+  motion.target = gesture.move(-500, motion.position);
   assert.equal(motion.target, 0);
   assert.equal(motion.velocity, velocity);
   motion.step(.05);
@@ -143,7 +144,7 @@ function sceneFixture(t, offset = 0) {
   const scene = Object.assign(Object.create(ThoughtScene.prototype), {
     stops, height:800, enabled:true, snapTimer:0, navigationTarget:null,
     motion:new ScrollMotion(offset), writtenScroll:null, scrollBounds:null,
-    wheelGesture:null, wheelTimer:0, lastScroll:offset, scrollDirection:0, refresh() {}
+    wheelGesture:null, wheelTimer:0, pulling:false, lastScroll:offset, scrollDirection:0, refresh() {}
   });
   const writes = [];
   globalThis.window = { scrollTo(options) {
@@ -164,32 +165,50 @@ function sceneFixture(t, offset = 0) {
   return { scene, wheel, frame, writes };
 }
 
-test('the idle timer ends the input gesture without interrupting an unfinished animation', t => {
+test('the pull captures approaching pages and preserves progress away from them', () => {
+  assert.equal(pulledScrollPosition(stops, 50, 1, 400), 50);
+  assert.equal(pulledScrollPosition(stops, 1000, 1, 400), 1000);
+  assert.equal(pulledScrollPosition(stops, 1300, 1, 400), 1500);
+  assert.equal(pulledScrollPosition(stops, 1490, -1, 400), 1490);
+  assert.equal(pulledScrollPosition(stops, 1800, -1, 400), 1500);
+  assert.equal(pulledScrollPosition(stops, 3500, 1, 400), 3500);
+});
+
+test('small gestures retain their progress instead of turning a page or snapping back', t => {
   const { scene, wheel, frame } = sceneFixture(t);
-  wheel(.25);
-  frame();
-  const velocity = scene.motion.velocity;
+  wheel(20);
   t.mock.timers.tick(240);
-  assert.equal(scene.wheelGesture, null);
+  finish(scene.motion, frame);
+  assert.equal(scene.motion.position, 20);
+  wheel(20);
+  t.mock.timers.tick(240);
+  finish(scene.motion, frame);
+  assert.equal(scene.motion.position, 40);
+});
+
+test('the pull continues a nearby approach without stopping its velocity', t => {
+  const { scene, wheel, frame } = sceneFixture(t);
+  wheel(1300);
+  assert.equal(scene.motion.target, 1300);
+  for (let i = 0; i < 3; i++) frame();
+  const velocity = scene.motion.velocity;
+  t.mock.timers.tick(80);
   assert.equal(scene.motion.target, 1500);
   assert.equal(scene.motion.velocity, velocity);
   finish(scene.motion, frame);
-  wheel(.25);
-  assert.equal(scene.motion.target, 3000);
+  assert.equal(scene.motion.position, 1500);
 });
 
-test('a new small gesture advances while the previous page turn is still settling', t => {
+test('resumed input takes control at the current view instead of continuing the automatic pull', t => {
   const { scene, wheel, frame } = sceneFixture(t);
-  wheel(.25);
-  for (let i = 0; i < 18; i++) frame();
-  assert.ok(scene.motion.position < 1500);
-  const velocity = scene.motion.velocity;
-  t.mock.timers.tick(240);
-  wheel(.25);
-  assert.equal(scene.motion.target, 3000);
-  assert.equal(scene.motion.velocity, velocity);
-  finish(scene.motion, frame);
-  assert.equal(scene.motion.position, 3000);
+  wheel(1300);
+  for (let i = 0; i < 3; i++) frame();
+  t.mock.timers.tick(80);
+  assert.equal(scene.pulling, true);
+  const position = scene.motion.position;
+  wheel(20);
+  assert.equal(scene.motion.target, position + 20);
+  assert.equal(scene.pulling, false);
 });
 
 test('rounded document scroll events preserve fractional motion and its velocity', t => {
