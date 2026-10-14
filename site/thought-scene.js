@@ -20,6 +20,20 @@ export function settledScrollPosition(stops, offset, direction, threshold) {
   return previousEnd;
 }
 
+export function scrollGestureBounds(stops, offset) {
+  const position = settledScrollPosition(stops, offset, 0, 0);
+  const index = stops.findIndex(stop => position >= stop.start + stop.entrance && position <= stop.start + stop.entrance + stop.overflow);
+  const stop = stops[index];
+  const start = stop.start + stop.entrance;
+  const end = start + stop.overflow;
+  const previous = stops[index - 1];
+  const next = stops[index + 1];
+  return {
+    min:offset <= start + 1 && previous ? previous.start + previous.entrance + previous.overflow : start,
+    max:offset >= end - 1 && next ? next.start + next.entrance : end
+  };
+}
+
 export class ThoughtScene {
   constructor(hero) {
     this.hero = hero;
@@ -32,11 +46,13 @@ export class ThoughtScene {
     this.navigationTarget = null;
     this.snapTimer = 0;
     this.snapTarget = null;
+    this.scrollBounds = null;
     this.pointerDown = false;
     this.touching = false;
     this.lastScroll = scrollY;
     this.scrollDirection = 0;
     this.onScroll = this.onScroll.bind(this);
+    this.onWheel = this.onWheel.bind(this);
     this.refresh = this.refresh.bind(this);
     this.resize = this.resize.bind(this);
     this.scheduleResize = this.scheduleResize.bind(this);
@@ -96,7 +112,7 @@ export class ThoughtScene {
     this.nextPage.addEventListener('click', () => this.turnPage(1));
     Object.assign(this.stage.dataset, { cameraX:'0', cameraY:'0', cameraYaw:'0', renderer:'perspective-notebook' });
     window.addEventListener('scroll', this.onScroll, { passive:true });
-    window.addEventListener('wheel', event => { if (event.deltaY) this.cancelSnap(); }, { passive:true });
+    window.addEventListener('wheel', this.onWheel, { passive:false });
     window.addEventListener('resize', this.scheduleResize, { passive:true });
     window.addEventListener('hashchange', () => this.navigate(location.hash));
     document.addEventListener('keydown', event => {
@@ -111,7 +127,11 @@ export class ThoughtScene {
     const releasePointer = () => { this.pointerDown = false; this.scheduleSnap(); };
     document.addEventListener('pointerup', releasePointer, { passive:true });
     document.addEventListener('pointercancel', releasePointer, { passive:true });
-    document.addEventListener('touchstart', () => { this.touching = true; this.cancelSnap(); }, { passive:true });
+    document.addEventListener('touchstart', event => {
+      this.touching = true;
+      this.cancelSnap();
+      if (this.enabled && event.touches.length === 1) this.scrollBounds = scrollGestureBounds(this.stops, scrollY);
+    }, { passive:true });
     const releaseTouch = event => { this.touching = event.touches.length > 0; this.scheduleSnap(); };
     document.addEventListener('touchend', releaseTouch, { passive:true });
     document.addEventListener('touchcancel', releaseTouch, { passive:true });
@@ -306,9 +326,10 @@ export class ThoughtScene {
     this.navigate(`#${this.stops[index].anchor}`, 'smooth');
   }
 
-  cancelSnap() {
+  cancelSnap(resetGesture = true) {
     clearTimeout(this.snapTimer);
     this.snapTimer = 0;
+    if (resetGesture) this.scrollBounds = null;
     if (this.snapTarget !== null || this.navigationTarget) {
       this.snapTarget = null;
       this.navigationTarget = null;
@@ -316,7 +337,23 @@ export class ThoughtScene {
     }
   }
 
+  onWheel(event) {
+    if (!this.enabled || event.defaultPrevented || event.ctrlKey || !event.deltaY) return;
+    event.preventDefault();
+    this.cancelSnap(false);
+    // Keep the same bounds through the gesture's momentum tail.
+    this.scrollBounds ??= scrollGestureBounds(this.stops, scrollY);
+    const unit = event.deltaMode === 1 ? 32 : event.deltaMode === 2 ? this.height : 1;
+    const top = clamp(scrollY + event.deltaY * unit, this.scrollBounds.min, this.scrollBounds.max);
+    window.scrollTo({ top, behavior:'instant' });
+    this.scheduleSnap();
+  }
+
   onScroll() {
+    if (this.scrollBounds) {
+      const top = clamp(scrollY, this.scrollBounds.min, this.scrollBounds.max);
+      if (Math.abs(top - scrollY) >= 1) window.scrollTo({ top, behavior:'instant' });
+    }
     const movement = scrollY - this.lastScroll;
     if (movement && this.snapTarget === null) this.scrollDirection = Math.sign(movement);
     this.lastScroll = scrollY;
@@ -327,12 +364,13 @@ export class ThoughtScene {
   scheduleSnap() {
     clearTimeout(this.snapTimer);
     if (!this.enabled || this.pointerDown || this.touching || document.hidden) return;
-    this.snapTimer = setTimeout(() => this.settle(), 160);
+    this.snapTimer = setTimeout(() => this.settle(), this.scrollBounds ? 240 : 160);
   }
 
   settle() {
     this.snapTimer = 0;
     this.snapTarget = null;
+    this.scrollBounds = null;
     if (!this.enabled || this.pointerDown || this.touching || document.hidden || this.navigationTarget) return;
     if (this.resizeFrame) this.resize();
     const top = settledScrollPosition(this.stops, scrollY, this.scrollDirection, clamp(this.height * .08, 40, 80));

@@ -1,5 +1,5 @@
 import { initializeSketchbook, connectNotes } from './sketchbook.js?v=11';
-import { ThoughtScene } from './thought-scene.js?v=15';
+import { ThoughtScene } from './thought-scene.js?v=16';
 import { lateralBrainSketch, dorsalBrainSketch, mindSketch, imagerySketch, recallMindSketch, embodiedMindSketch, probabilitySketch, latentSpaceSketch, latentManifoldSketch } from './cognition-studies.js?v=6';
 import { initializeCipher } from './cipher.js?v=4';
 
