@@ -1,0 +1,149 @@
+@font-face {
+  font-family:'Reenie Beanie';
+  src:url('../site/assets/fonts/ReenieBeanie-Regular.ttf') format('truetype');
+  font-weight:400;
+  font-display:swap;
+}
+:root {
+  --paper:#fbfaf7;
+  --ink:#302e29;
+  --muted:#857e75;
+  --accent:#715486;
+  --ochre:#e1b453;
+  --teal:#6caaa0;
+  --coral:#d99585;
+  --blue:#83a7c9;
+  --hand:'Reenie Beanie', 'Segoe Print', 'Bradley Hand', cursive;
+  --gutter:clamp(18px, 4.6vw, 68px);
+  --halo:0 0 3px var(--paper), 0 0 6px var(--paper), 0 0 12px var(--paper), 0 0 18px var(--paper);
+  color-scheme:light;
+}
+* { box-sizing:border-box; }
+html { background:var(--paper); }
+body { margin:0; min-height:100vh; background:var(--paper); color:var(--ink); font-family:var(--hand); font-size:25px; line-height:1.12; font-synthesis:none; -webkit-font-smoothing:antialiased; }
+body::after { content:''; position:fixed; inset:0; z-index:30; pointer-events:none; opacity:.06; mix-blend-mode:multiply; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23877d6d' filter='url(%23g)' d='M0 0h240v240H0z'/%3E%3C/svg%3E"); }
+::selection { background:var(--accent); color:var(--paper); }
+a { color:inherit; text-decoration:none; }
+:focus-visible { outline:1.5px dashed var(--accent); outline-offset:5px; border-radius:2px; }
+h1, h2, p, ol, ul, figure { margin:0; font-weight:400; }
+button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+
+.skip { position:fixed; left:16px; top:-80px; z-index:50; padding:6px 14px; background:var(--ink); color:var(--paper); }
+.skip:focus { top:12px; }
+
+.masthead { position:fixed; z-index:20; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding:20px var(--gutter); pointer-events:none; }
+.masthead > * { pointer-events:auto; text-shadow:var(--halo); }
+.wordmark { font-size:35px; display:inline-block; transform:rotate(-2deg); }
+.disciplines { font-size:22px; transform:rotate(1deg); text-align:right; }
+
+/* the cell */
+.stage { position:fixed; inset:0; overflow:hidden; touch-action:manipulation; }
+.ink { position:absolute; inset:0; width:100%; height:100%; }
+.world { position:absolute; left:0; top:0; width:0; height:0; transform-origin:0 0; will-change:transform; }
+.leader { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+.leader path { fill:none; stroke:var(--accent); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; opacity:0; transition:opacity .4s; }
+.leader.on path { opacity:.5; }
+
+.node { position:absolute; white-space:nowrap; font-size:clamp(30px, 2.3vw, 44px); line-height:1; padding:6px 8px; color:var(--ink); text-shadow:var(--halo); cursor:pointer; transition:opacity .6s, color .25s; clip-path:inset(-20% 105% -20% -10%); }
+.node.grown { animation:write .9s cubic-bezier(.3,.1,.3,1) forwards; }
+.node:hover, .node.lit { color:var(--accent); }
+.node-soma { display:flex; flex-direction:column; gap:3px; }
+.node-soma .name { font-size:clamp(40px, 3.2vw, 62px); }
+.node-soma .role { font-size:clamp(19px, 1.45vw, 28px); color:var(--muted); }
+.node-axon { font-size:clamp(21px, 1.6vw, 31px); color:var(--accent); }
+.node-bouton { font-size:clamp(21px, 1.6vw, 31px); color:var(--muted); }
+.node-hello { font-size:clamp(32px, 2.5vw, 48px); color:var(--accent); }
+.node-you { font-size:clamp(21px, 1.65vw, 32px); color:var(--muted); }
+.stage.focused .node { opacity:.22; }
+.stage.focused .node.active, .stage.focused .node.kin { opacity:1; }
+.stage.focused .node:hover { opacity:1; }
+.node.static { animation:none; clip-path:none; }
+@keyframes write { to { clip-path:inset(-20% -10% -20% -10%); } }
+
+.question { position:fixed; z-index:10; left:var(--gutter); bottom:clamp(28px, 7vh, 72px); font-size:clamp(52px, 5.4vw, 80px); line-height:.98; transform:rotate(-2deg); transform-origin:left bottom; text-shadow:var(--halo); pointer-events:none; transition:opacity .7s; }
+.question .jot { display:block; font-size:24px; color:var(--muted); margin:0 0 10px 4px; }
+.underline { position:relative; display:inline-block; isolation:isolate; }
+.underline::after { content:''; position:absolute; z-index:-1; left:-2%; right:-3%; bottom:.04em; height:.15em; background:var(--ochre); mask:url('../site/assets/crayon-grain.svg') repeat; mask-size:32px 32px; -webkit-mask:url('../site/assets/crayon-grain.svg') repeat; -webkit-mask-size:32px 32px; transform:rotate(-.8deg); border-radius:40% 60% 50% 40%; }
+body.reading .question { opacity:0; }
+
+.colophon { position:fixed; z-index:20; right:var(--gutter); bottom:18px; display:flex; gap:18px; align-items:baseline; font-size:20px; color:var(--muted); text-shadow:var(--halo); transition:opacity .6s; }
+.regrow { color:var(--accent); }
+.regrow:hover { text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:1px; }
+body.reading .colophon { opacity:0; pointer-events:none; }
+
+/* notes */
+.notes { position:fixed; z-index:15; top:50%; width:min(500px, 38vw); max-height:calc(100vh - 170px); overflow:auto; scrollbar-width:none; padding:28px 30px 32px; transform:translateY(-50%); pointer-events:none; }
+.notes::-webkit-scrollbar { display:none; }
+.notes[data-side="right"] { left:52vw; }
+.notes[data-side="left"] { left:max(var(--gutter), 8vw); }
+.notes::before { content:''; position:fixed; inset:-50px; z-index:-1; }
+.note { display:none; position:relative; outline:none; }
+.note.open { display:block; pointer-events:auto; }
+.note::before { content:''; position:absolute; z-index:-1; inset:-6px -10px; background:rgba(251,250,247,.93); box-shadow:0 0 34px 34px rgba(251,250,247,.93); border-radius:30px; pointer-events:none; }
+.note > * { margin-bottom:14px; }
+.note.open > * { animation:write 1.1s cubic-bezier(.3,.1,.3,1) both; animation-delay:calc(var(--i, 0) * 110ms + 200ms); clip-path:inset(-20% 105% -20% -10%); }
+.note .jot { font-size:22px; color:var(--muted); }
+.note h2 { font-size:clamp(44px, 3.6vw, 58px); line-height:.96; transform:rotate(-1.2deg); transform-origin:left; margin-bottom:16px; }
+.note .ask { color:var(--accent); font-size:28px; }
+.note p { max-width:30ch; }
+.note .aside { color:var(--accent); font-size:24px; transform:rotate(-1.5deg); transform-origin:left; }
+.note .small { color:var(--muted); font-size:21px; max-width:none; }
+.note .out, .note .index a, .note .links a { color:var(--accent); background-image:linear-gradient(currentColor, currentColor); background-size:100% 1px; background-position:0 92%; background-repeat:no-repeat; transition:background-size .3s; }
+.note .out:hover, .note .index a:hover, .note .links a:hover { background-size:0 1px; background-position:100% 92%; }
+.note .index { padding:0; list-style:none; counter-reset:n; font-size:29px; line-height:1.3; }
+.note .index li { counter-increment:n; }
+.note .index li::before { content:'0' counter(n) '  '; color:var(--muted); font-size:21px; white-space:pre; }
+.note .links { padding:0; list-style:none; font-size:29px; line-height:1.35; }
+
+.study { margin:4px 0 16px; max-width:400px; }
+.study-sketch { display:block; width:100%; height:auto; aspect-ratio:420/240; color:var(--ink); overflow:visible; mix-blend-mode:multiply; }
+.study-sketch path { fill:none; stroke:currentColor; stroke-width:1.35; stroke-linecap:round; stroke-linejoin:round; }
+.study-sketch text { fill:currentColor; font-family:var(--hand); font-size:27px; }
+.study-sketch .tiny { font-size:23px; }
+.study-sketch circle { fill:currentColor; }
+.study-sketch .faint, .study-sketch .construction { opacity:.45; }
+.study-sketch .violet, .study-sketch .pen-arrow { color:var(--accent); }
+.study-sketch path.violet { stroke-width:1.6; }
+.study-sketch .cell-hatch { stroke-width:1.7; opacity:.8; }
+.study-sketch .missing-cell { opacity:.4; stroke-dasharray:2 4; }
+.study-sketch .neuron-node { fill:var(--paper); }
+.study-sketch .terminal-mark { font-family:ui-monospace, monospace; font-size:20px; }
+.study-sketch .crayon-marks { pointer-events:none; }
+.study figcaption { font-size:22px; color:var(--muted); transform:rotate(-1deg); margin:2px 0 0 8px; }
+
+.turn { position:fixed; z-index:20; left:50%; bottom:18px; display:flex; gap:26px; align-items:baseline; font-size:24px; color:var(--muted); transform:translateX(-50%); opacity:0; pointer-events:none; transition:opacity .5s; text-shadow:var(--halo); }
+.turn a:hover { color:var(--accent); }
+.turn [data-step] { font-size:28px; color:var(--accent); }
+body.reading .turn { opacity:1; pointer-events:auto; }
+
+/* narrow, portrait screens: the cell above, the note below */
+@media (max-width:760px), (orientation:portrait) and (max-width:1000px) {
+  body { font-size:23px; }
+  .wordmark { font-size:30px; }
+  .node { font-size:28px; }
+  .node-soma .name { font-size:38px; }
+  .node-soma .role { font-size:18px; }
+  .node-bouton, .node-axon { font-size:21px; }
+  .question { top:86px; bottom:auto; font-size:clamp(40px, 11vw, 60px); transform:rotate(-2deg); transform-origin:left top; }
+  .question .jot { font-size:20px; }
+  .notes, .notes[data-side] { left:0; right:0; top:auto; bottom:0; width:auto; height:58vh; max-height:none; transform:none; padding:24px var(--gutter) 80px; }
+  .notes::after { content:''; position:fixed; left:0; right:0; bottom:0; height:58vh; z-index:-1; background:linear-gradient(rgba(251,250,247,0), var(--paper) 46px); pointer-events:none; }
+  body:not(.reading) .notes::after { display:none; }
+  .note::before { display:none; }
+  .note h2 { font-size:44px; }
+  .note p { max-width:none; }
+  .colophon { left:var(--gutter); right:var(--gutter); justify-content:space-between; font-size:18px; }
+  .turn { left:0; right:0; bottom:0; justify-content:center; padding:26px 0 14px; transform:none; background:linear-gradient(rgba(251,250,247,0), var(--paper) 45%); }
+  .colophon .phrase { display:none; }
+  .disciplines { font-size:17px; max-width:11em; }
+}
+
+/* without the cell, the notes are an ordinary page */
+html:not(.grown-ready) .stage, html:not(.grown-ready) .turn, html:not(.grown-ready) .colophon { display:none; }
+html:not(.grown-ready) .question { position:static; margin:120px var(--gutter) 40px; }
+html:not(.grown-ready) .notes { position:static; transform:none; width:auto; max-height:none; max-width:640px; margin:0 var(--gutter); pointer-events:auto; }
+html:not(.grown-ready) .note { display:block; margin-bottom:80px; }
+
+@media (prefers-reduced-motion:reduce) {
+  .node, .node.grown, .note.open > * { animation:none; clip-path:none; }
+}
